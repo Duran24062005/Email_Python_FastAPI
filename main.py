@@ -12,7 +12,8 @@ app = FastAPI(
     description=app_config["DESCRIPTION"],
     contact={
         "name": app_config["CONTACT_NAME"]
-    }
+    },
+    docs_url="/",
 )
 
 # Inicializar base de datos al arrancar
