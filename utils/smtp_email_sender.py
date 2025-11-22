@@ -30,6 +30,7 @@ class SMTPEmailSender(IEmailSender):
         self.smtp_password = smtp_password or os.getenv("SMTP_PASSWORD")
         self.use_tls = use_tls
         self.use_ssl = use_ssl
+        print(f"🔧 SMTP Config: Host={self.smtp_host}, Port={self.smtp_port}, SSL={self.use_ssl}, TLS={self.use_tls}")
     
     async def send(
         self,

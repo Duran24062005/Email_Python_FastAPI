@@ -15,11 +15,16 @@ import os
 # ============================================
 
 def get_email_sender() -> IEmailSender:
+    """
+    Factory para obtener el sender de emails apropiado
+    (Dependency Inversion: retorna interface, no implementación concreta)
+    """
+    # En producción usa SMTP real, en desarrollo usa Mock
     env = os.getenv("ENVIRONMENT", "development")
     
     if env == "production":
         port = int(os.getenv("SMTP_PORT", "587"))
-        # Si usa puerto 465, activar SSL
+        # Puerto 465 requiere SSL, puerto 587 requiere TLS
         use_ssl = (port == 465)
         use_tls = (port == 587)
         
