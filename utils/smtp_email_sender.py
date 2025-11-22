@@ -30,7 +30,6 @@ class SMTPEmailSender(IEmailSender):
         self.smtp_password = smtp_password or os.getenv("SMTP_PASSWORD")
         self.use_tls = use_tls
         self.use_ssl = use_ssl
-        print(f"🔧 SMTP Config: Host={self.smtp_host}, Port={self.smtp_port}, SSL={self.use_ssl}, TLS={self.use_tls}")
     
     async def send(
         self,
@@ -68,12 +67,31 @@ class SMTPEmailSender(IEmailSender):
                 message.attach(part_html)
             
             # Conectar y enviar
-            with smtplib.SMTP(self.smtp_host, self.smtp_port) as server:
+            if self.use_ssl:
+                # Usar SSL en puerto 465
+                print(f"🔌 Conectando a {self.smtp_host}:{self.smtp_port} con SSL...")
+                server = smtplib.SMTP_SSL(self.smtp_host, self.smtp_port, timeout=30)
+                print("🔐 Autenticando...")
+                server.login(self.smtp_user, self.smtp_password)
+                print("📧 Enviando mensaje...")
+                server.send_message(message)
+                server.quit()
+                print("✅ Conexión cerrada correctamente")
+            else:
+                # Usar TLS en puerto 587
+                print(f"🔌 Conectando a {self.smtp_host}:{self.smtp_port} con TLS...")
+                server = smtplib.SMTP(self.smtp_host, self.smtp_port, timeout=30)
+                server.ehlo()
                 if self.use_tls:
                     server.starttls()
+                    server.ehlo()
                 
+                print("🔐 Autenticando...")
                 server.login(self.smtp_user, self.smtp_password)
+                print("📧 Enviando mensaje...")
                 server.send_message(message)
+                server.quit()
+                print("✅ Conexión cerrada correctamente")
             
             print(f"✅ Email enviado exitosamente a {recipient}")
             return True
