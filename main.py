@@ -3,6 +3,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 from config.config import app_config
 from routes.email_routes import email_router
+from middlewares.cors import app_cors
 
 app = FastAPI(
     title=app_config["APP_NAME"],
@@ -12,6 +13,8 @@ app = FastAPI(
         "name": app_config["CONTACT_NAME"]
     }
 )
+
+app_cors(app)
 
 app.mount("/public", StaticFiles(directory="static"), name="static")
 
