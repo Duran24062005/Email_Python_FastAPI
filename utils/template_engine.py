@@ -45,6 +45,7 @@ class Jinja2TemplateEngine(ITemplateEngine):
         """
         try:
             template = self.env.get_template(template_name)
+            print(self.templates_dir)
             return template.render(**context)
         except TemplateNotFound:
             raise FileNotFoundError(f"Template '{template_name}' not found in {self.templates_dir}")

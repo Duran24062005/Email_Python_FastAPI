@@ -21,13 +21,15 @@ class SMTPEmailSender(IEmailSender):
         smtp_port: int = None,
         smtp_user: str = None,
         smtp_password: str = None,
-        use_tls: bool = True
+        use_tls: bool = True,
+        use_ssl: bool = False
     ):
         self.smtp_host = smtp_host or os.getenv("SMTP_HOST", "smtp.gmail.com")
         self.smtp_port = smtp_port or int(os.getenv("SMTP_PORT", "587"))
         self.smtp_user = smtp_user or os.getenv("SMTP_USER")
         self.smtp_password = smtp_password or os.getenv("SMTP_PASSWORD")
         self.use_tls = use_tls
+        self.use_ssl = use_ssl
     
     async def send(
         self,
