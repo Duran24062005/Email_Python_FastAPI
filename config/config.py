@@ -6,7 +6,7 @@ load_dotenv()
 app_config = {
     "APP_NAME": "Email_Python_FastAPI",
     "VERSION": "1.0.0",
-    "DESCRIPTION": "API para enviar correos electrónicos usando FastAPI y Python",
+    "DESCRIPTION": "API for sending emails using FastAPI and Python",
     "CONTACT_NAME": "Administrador",
     "PORT": os.getenv("PORT") or 8000,
     "HOST": os.getenv("HOST") or "0.0.0.0"
