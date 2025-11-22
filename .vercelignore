@@ -1,0 +1,9 @@
+!public/
+
+# Ignorar archivos de desarrollo
+__pycache__/
+*.pyc
+.env
+.env.local
+venv/
+node_modules/
