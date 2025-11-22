@@ -20,7 +20,6 @@ app.mount("/public", StaticFiles(directory="static"), name="static")
 
 @app.get("/")
 async def root():
-    return {"message": "Welcome to the Email Python FastAPI Service"}
-    # return FileResponse("public/index.html")
+    return FileResponse("public/index.html")
 
 app.include_router(email_router, prefix="/emails")
