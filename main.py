@@ -13,7 +13,7 @@ app = FastAPI(
     }
 )
 
-app.mount("/public", StaticFiles(directory="public"), name="static")
+app.mount("/public", StaticFiles(directory="static"), name="static")
 
 @app.get("/")
 async def root():
