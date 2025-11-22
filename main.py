@@ -20,6 +20,6 @@ app.mount("/public", StaticFiles(directory="static"), name="static")
 
 @app.get("/")
 async def root():
-    return FileResponse("public/index.html")
+    return FileResponse("static/index.html")
 
 app.include_router(email_router, prefix="/emails")
