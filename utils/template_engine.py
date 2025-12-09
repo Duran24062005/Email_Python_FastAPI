@@ -20,7 +20,6 @@ class Jinja2TemplateEngine(ITemplateEngine):
         
         # Crear directorio si no existe
         self.templates_dir.mkdir(exist_ok=True)
-        
         # Configurar Jinja2
         self.env = Environment(
             loader=FileSystemLoader(self.templates_dir),
@@ -45,6 +44,7 @@ class Jinja2TemplateEngine(ITemplateEngine):
         """
         try:
             template = self.env.get_template(template_name)
+            print(template_name)
             print(self.templates_dir)
             return template.render(**context)
         except TemplateNotFound:
@@ -53,6 +53,7 @@ class Jinja2TemplateEngine(ITemplateEngine):
     def list_templates(self) -> list:
         """Lista todas las plantillas disponibles"""
         return self.env.list_templates()
+
 
 
 class SimpleTemplateEngine(ITemplateEngine):

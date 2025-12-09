@@ -100,6 +100,7 @@ class EmailService:
                 # Si la plantilla no existe, usar el body como fallback
                 return f"<html><body>{email_data.body or ''}</body></html>"
         
+
         # Fallback: convertir texto plano a HTML básico
         if email_data.body:
             return f"<html><body><p>{email_data.body}</p></body></html>"

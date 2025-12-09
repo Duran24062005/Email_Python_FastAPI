@@ -29,6 +29,11 @@ app.mount("/public", StaticFiles(directory="static"), name="static")
 
 @app.get("/")
 async def root():
+    """
+    Ruta raíz que sirve el archivo index.html
+    
+    Nota: No  es necesario para la documentación de la API
+    """
     return FileResponse("static/index.html")
 
 app.include_router(email_router, prefix="/emails", tags=["Emails"])

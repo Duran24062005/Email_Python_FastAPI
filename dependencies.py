@@ -40,6 +40,7 @@ def get_template_engine() -> ITemplateEngine:
     """
     Factory para obtener el motor de plantillas
     """
+    
     return Jinja2TemplateEngine(templates_dir="templates")
 
 
