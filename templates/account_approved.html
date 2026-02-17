@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Cuenta aprobada</title>
+    <style>
+      body {
+        font-family: Arial, Helvetica, sans-serif;
+        background: #f4f6f8;
+        padding: 40px 0;
+        margin: 0;
+      }
+      .container {
+        max-width: 600px;
+        margin: auto;
+        background: #ffffff;
+        border-radius: 10px;
+        padding: 40px 30px;
+        box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
+      }
+      h1 {
+        color: #1f2937;
+        margin-bottom: 10px;
+      }
+      p {
+        color: #4b5563;
+        line-height: 1.6;
+      }
+      .badge {
+        display: inline-block;
+        background: #eef2ff;
+        color: #3730a3;
+        padding: 6px 12px;
+        border-radius: 6px;
+        font-size: 14px;
+        margin: 10px 0 20px 0;
+      }
+      .button {
+        display: inline-block;
+        background: #111827;
+        color: #ffffff !important;
+        padding: 14px 22px;
+        border-radius: 8px;
+        text-decoration: none;
+        margin-top: 20px;
+        font-weight: bold;
+      }
+      .footer {
+        margin-top: 35px;
+        font-size: 13px;
+        color: #9ca3af;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>¡Tu cuenta ha sido aprobada! 🎉</h1>
+
+      <p>Hola <strong>{{ nombre }}</strong>,</p>
+
+      <p>
+        Nos alegra informarte que tu cuenta en <strong>{{ empresa }}</strong>
+        ha sido aprobada correctamente.
+      </p>
+
+      <p>Tu rol dentro de la plataforma es:</p>
+      <div class="badge">{{ role }}</div>
+
+      <p>
+        Ya puedes iniciar sesión y comenzar a utilizar todas las funcionalidades
+        disponibles.
+      </p>
+
+      <a href="{{ login_link }}" class="button"> Iniciar sesión </a>
+
+      <p class="footer">
+        Si no solicitaste esta cuenta, puedes ignorar este mensaje.<br />
+        © {{ empresa }}
+      </p>
+    </div>
+  </body>
+</html>
