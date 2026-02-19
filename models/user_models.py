@@ -25,9 +25,9 @@ class User(Base):
 
     id = Column(Integer, primary_key=True, index=True, autoincrement=True)
     name = Column(String(255), nullable=False, index=True)
-    email = Column(String(255), nullable=False, index=True)
+    email = Column(String(255), nullable=False, index=True, unique=True)
     hash_password = Column(Integer, nullable=False)
-    email_key = Column(String(255), nullable=False, index=True)
+    email_key = Column(String(255), nullable=True, index=True)
     status = Column(
         Enum(UserStatus, name='userStatus', create_type=False),
         default=UserStatus.ACTIVE,
@@ -39,7 +39,7 @@ class User(Base):
         nullable=False
     )
     last_login = Column(DateTime, nullable=True)
-    email_verify = Column(Boolean, nullable=False)
+    email_verify = Column(Boolean, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
 

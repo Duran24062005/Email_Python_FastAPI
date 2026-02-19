@@ -10,7 +10,7 @@ class IUserRepository(ABC):
     """
 
     @abstractmethod
-    async def create(self, userData: UserCreate) -> User:
+    async def create(self, user_data: UserCreate) -> User:
         """Crea un nuevo registro de usuario"""
         pass
 
@@ -25,7 +25,7 @@ class IUserRepository(ABC):
         pass
 
     @abstractmethod
-    async def update(self, user_id: int, userData: UserUpdate) -> Optional[User]:
+    async def update(self, user_id: int, user_data: UserUpdate) -> Optional[User]:
         """Actualiza un usuario existente"""
         pass
 
