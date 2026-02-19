@@ -1,0 +1,65 @@
+services:
+  # Servicio principal: API FastAPI de emails
+  email-api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: email-python-fastapi
+    ports:
+      - "${PORT:-8001}:8001"
+    environment:
+      # App
+      - PORT=8001
+      - HOST=0.0.0.0
+      - ENVIRONMENT=${ENVIRONMENT:-development}
+      # SMTP
+      - SMTP_HOST=${SMTP_HOST:-smtp.gmail.com}
+      - SMTP_PORT=${SMTP_PORT:-587}
+      - SMTP_USER=${SMTP_USER}
+      - SMTP_PASSWORD=${SMTP_PASSWORD}
+      # Base de datos (usa el servicio postgres de este compose)
+      - PGHOST=postgres
+      - PGPORT=5432
+      - PGUSER=${PGUSER:-admin}
+      - PGPASSWORD=${PGPASSWORD:-admin123}
+      - PGDATABASE=${PGDATABASE:-email_db}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./templates:/app/templates   # Hot-reload de plantillas sin rebuild
+      - ./static:/app/static
+      - ./uploads:/app/uploads
+    networks:
+      - email-network
+    restart: unless-stopped
+
+  # Servicio de base de datos PostgreSQL
+  postgres:
+    image: postgres:16-alpine
+    container_name: email-postgres
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: ${PGUSER:-admin}
+      POSTGRES_PASSWORD: ${PGPASSWORD:-admin123}
+      POSTGRES_DB: ${PGDATABASE:-email_db}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./database.sql:/docker-entrypoint-initdb.d/init.sql  # Inicializa la BD automáticamente
+    networks:
+      - email-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${PGUSER:-admin} -d ${PGDATABASE:-email_db}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+networks:
+  email-network:
+    driver: bridge
+
+volumes:
+  postgres-data:
+    driver: local

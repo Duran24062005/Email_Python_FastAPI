@@ -12,38 +12,49 @@ CREATE DATABASE email_db
 \c email_db
 
 -- Crear enum para estados de email
-CREATE TYPE email_status AS ENUM ('pending', 'sent', 'failed');
+-- ============================================================
+-- Script de inicialización para Docker
+-- Se ejecuta automáticamente al crear el contenedor de postgres
+-- ============================================================
+
+-- Crear enum (nombre debe coincidir con el modelo SQLAlchemy: 'emailstatus')
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'emailstatus') THEN
+        CREATE TYPE emailstatus AS ENUM ('pending', 'sent', 'failed');
+    END IF;
+END$$;
 
 -- Crear tabla de emails
 CREATE TABLE IF NOT EXISTS emails (
-    id SERIAL PRIMARY KEY,
-    recipient VARCHAR(255) NOT NULL,
-    subject VARCHAR(500) NOT NULL,
-    body TEXT,
-    html_body TEXT,
-    status email_status DEFAULT 'pending' NOT NULL,
+    id          SERIAL PRIMARY KEY,
+    recipient   VARCHAR(255) NOT NULL,
+    subject     VARCHAR(500) NOT NULL,
+    body        TEXT,
+    html_body   TEXT,
+    status      emailstatus  NOT NULL DEFAULT 'pending',
     error_message TEXT,
-    sent_at TIMESTAMP,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
+    sent_at     TIMESTAMP,
+    created_at  TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at  TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
--- Crear índices para mejorar rendimiento
-CREATE INDEX idx_emails_recipient ON emails(recipient);
-CREATE INDEX idx_emails_status ON emails(status);
-CREATE INDEX idx_emails_created_at ON emails(created_at DESC);
+-- Índices
+CREATE INDEX IF NOT EXISTS idx_emails_recipient  ON emails(recipient);
+CREATE INDEX IF NOT EXISTS idx_emails_status     ON emails(status);
+CREATE INDEX IF NOT EXISTS idx_emails_created_at ON emails(created_at DESC);
 
--- Crear función para actualizar updated_at automáticamente
+-- Trigger para updated_at automático
 CREATE OR REPLACE FUNCTION update_updated_at_column()
 RETURNS TRIGGER AS $$
 BEGIN
     NEW.updated_at = CURRENT_TIMESTAMP;
     RETURN NEW;
 END;
-$$ language 'plpgsql';
+$$ LANGUAGE plpgsql;
 
--- Crear trigger para actualizar updated_at
-CREATE TRIGGER update_emails_updated_at 
+DROP TRIGGER IF EXISTS update_emails_updated_at ON emails;
+CREATE TRIGGER update_emails_updated_at
     BEFORE UPDATE ON emails
     FOR EACH ROW
     EXECUTE FUNCTION update_updated_at_column();
