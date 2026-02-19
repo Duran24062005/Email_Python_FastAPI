@@ -1,24 +1,36 @@
 from pydantic import BaseModel, EmailStr, Field
 from typing import Optional, Dict, Any
 from datetime import datetime
+from enum import Enum
+
+
+class EmailStatus(str, Enum):
+    PENDING = "pending"
+    SENT = "sent"
+    FAILED = "failed"
 
 
 class EmailBase(BaseModel):
     """Schema base para emails"""
     recipient: EmailStr = Field(..., description="Email del destinatario")
-    subject: str = Field(..., min_length=1, max_length=200, description="Asunto del email")
+    subject: str = Field(..., min_length=1, max_length=500, description="Asunto del email")
 
 
 class EmailCreate(EmailBase):
     """Schema para crear un email (envío directo)"""
+    user_id: int = Field(..., description="ID del usuario que envía el email")
     body: Optional[str] = Field(None, description="Cuerpo del email en texto plano")
     html_body: Optional[str] = Field(None, description="Cuerpo del email en HTML")
     template_name: Optional[str] = Field(None, description="Nombre de la plantilla a usar")
-    template_data: Optional[Dict[str, Any]] = Field(default_factory=dict, description="Datos para la plantilla")
+    template_data: Optional[Dict[str, Any]] = Field(
+        default_factory=dict,
+        description="Datos para la plantilla"
+    )
 
     class Config:
         json_schema_extra = {
             "example": {
+                "user_id": 1,
                 "recipient": "usuario@example.com",
                 "subject": "Bienvenido a nuestra plataforma",
                 "template_name": "welcome",
@@ -33,9 +45,14 @@ class EmailCreate(EmailBase):
 class EmailResponse(EmailBase):
     """Schema para respuesta de email"""
     id: int
-    status: str = Field(..., description="Estado del email: sent, failed, pending")
+    user_id: int
+    body: Optional[str] = None
+    html_body: Optional[str] = None
+    status: EmailStatus = Field(..., description="Estado del email")
     sent_at: Optional[datetime] = None
     error_message: Optional[str] = None
+    created_at: datetime
+    updated_at: datetime
 
     class Config:
         from_attributes = True
@@ -43,8 +60,9 @@ class EmailResponse(EmailBase):
 
 class EmailUpdate(BaseModel):
     """Schema para actualizar un email"""
-    status: Optional[str] = None
+    status: Optional[EmailStatus] = None
     error_message: Optional[str] = None
+    sent_at: Optional[datetime] = None
 
 
 class EmailList(BaseModel):

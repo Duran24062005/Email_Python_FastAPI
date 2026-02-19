@@ -1,4 +1,5 @@
-from sqlalchemy import Column, Integer, String, Text, DateTime, Enum
+from sqlalchemy import Column, Integer, String, Text, DateTime, Enum, ForeignKey
+from sqlalchemy.orm import relationship
 from sqlalchemy.ext.declarative import declarative_base
 from datetime import datetime
 import enum
@@ -18,6 +19,7 @@ class Email(Base):
     __tablename__ = "emails"
 
     id = Column(Integer, primary_key=True, index=True, autoincrement=True)
+    user_id = Column(Integer, ForeignKey("user.id"), nullable=False)
     recipient = Column(String(255), nullable=False, index=True)
     subject = Column(String(500), nullable=False)
     body = Column(Text, nullable=True)
@@ -31,6 +33,9 @@ class Email(Base):
     sent_at = Column(DateTime, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+
+    # Relación hacia Users
+    user = relationship("User", back_populates="Email")
 
     def __repr__(self):
         return f"<Email(id={self.id}, recipient={self.recipient}, status={self.status})>"

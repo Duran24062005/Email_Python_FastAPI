@@ -15,7 +15,7 @@ app_config = {
 database_config = {
     "DB_HOST": os.getenv("PGHOST") or "localhost",
     "DB_PORT": os.getenv("PGPORT") or 5432,
-    "DB_USER": os.getenv("PGUSER") or "your_username",
+    "DB_USER": os.getenv("PGUSER") or "postgres",
     "DB_PASSWORD": os.getenv("PGPASSWORD") or "your_password",
     "DB_NAME": os.getenv("PGDATABASE") or "your_database"
 }
