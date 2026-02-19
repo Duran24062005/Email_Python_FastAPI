@@ -1,3 +1,6 @@
+from pydantic import ValidationError
+
+from core.exceptions import EmailAlreadyExists, WeakPassword
 from repositories.user_repository import UserRepository
 from schemas.user_schemas import UserCreate, UserResponse
 
@@ -33,14 +36,24 @@ class AuthService:
         Returns:
             UserResponse: Respuesta con el estado del usuario
         """
-        if(user_data.name or user_data.email == None or user_data.password == None):
-            pass
+        # Validaciones de negocio
+        if not user_data.name or not user_data.email or not user_data.password:
+            raise ValidationError("Campos obligatorios faltantes")
 
-        email_exist = self.repository.get_by_email(user_data.email)
-        user_record = await self.repository.create(
+        if len(user_data.password) < 6:
+            raise WeakPassword("La contraseña es demasiado corta")
+
+        email_exist = await self.repository.get_by_email(user_data.email)
+
+        if email_exist:
+            raise EmailAlreadyExists("El email ya está registrado")
+
+        hashed = hash_password(user_data.password)
+
+        return await self.repository.create(
             UserCreate(
                 name=user_data.name,
                 email=user_data.email,
-                hash_password=user_data.password
+                hash_password=hashed
             )
         )
