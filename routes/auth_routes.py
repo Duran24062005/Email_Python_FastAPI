@@ -47,7 +47,7 @@ async def logout(
 
     Recibe un Bearer token válido.
 
-    ⚠️ Se debe eliminar el token en en frontend tambien.
+    🔒 Requiere Bearer token válido en el header Authorization.
     """
     return await controller.login(credentials)
 
