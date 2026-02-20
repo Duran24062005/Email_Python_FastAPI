@@ -49,6 +49,28 @@ class UserRepository(IUserRepository):
         """Elimina un usuario"""
         pass
 
+    async def create_with_hash(self, name: str, email: str, hashed_password: str) -> User:
+        """Crea usuario con contraseña ya hasheada"""
+        user = User(name=name, email=email, hash_password=hashed_password)
+        self.db.add(user)
+        self.db.commit()
+        self.db.refresh(user)
+        return user
+
+    async def update_last_login(self, user_id: int) -> None:
+        from datetime import datetime
+        user = await self.get_by_id(user_id)
+        if user:
+            user.last_login = datetime.utcnow()
+            self.db.commit()
+
+    async def update_password(self, user_id: int, hashed_password: str) -> None:
+        user = await self.get_by_id(user_id)
+        if user:
+            user.hash_password = hashed_password
+            self.db.commit()
+
+
     async def count(self) -> int:
         """Cuenta total de usuarios"""
         pass

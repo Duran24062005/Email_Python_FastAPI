@@ -1,32 +1,29 @@
 from sqlalchemy import Column, Integer, String, DateTime, Enum, Boolean
 from sqlalchemy.orm import relationship
-from sqlalchemy.ext.declarative import declarative_base
 from datetime import datetime
 import enum
+from config.database.base import Base  # ← Base compartida, sin import circular
 
-Base = declarative_base()
 
 class UserStatus(str, enum.Enum):
-    """Estados posibles de un email"""
     PENDING = "pending"
     ACTIVE = "active"
     UNACTIVE = "deleted"
     BLOCKED = "blocked"
 
+
 class UserRole(str, enum.Enum):
-    """Estados posibles de un email"""
     ADMIN = "admin"
     GENERAL = "general"
 
 
 class User(Base):
-    """Modelo de base de datos para usuarios"""
     __tablename__ = "users"
 
     id = Column(Integer, primary_key=True, index=True, autoincrement=True)
     name = Column(String(255), nullable=False, index=True)
     email = Column(String(255), nullable=False, index=True, unique=True)
-    hash_password = Column(Integer, nullable=False)
+    hash_password = Column(String(255), nullable=False)  # ← String, no Integer
     email_key = Column(String(255), nullable=True, index=True)
     status = Column(
         Enum(UserStatus, name='userStatus', create_type=False),
@@ -43,5 +40,4 @@ class User(Base):
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
 
-    # Relacion hacia inversa
-    email = relationship("Emails", back_populates="user", uselist=False)
+    emails = relationship("Email", back_populates="user", uselist=True)  # ← "emails" plural

@@ -35,6 +35,7 @@ def init_db():
     Inicializa la base de datos creando todas las tablas.
     Llamar esto al inicio de la aplicación.
     """
+    from models.user_models import Base
     from models.email_model import Base
     from sqlalchemy import text
     

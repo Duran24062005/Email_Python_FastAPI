@@ -1,127 +1,80 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
+from controllers.auth_controller import AuthController
+from schemas.user_schemas import UserCreate, LoginRequest, TokenResponse, UserResponse, ChangePasswordRequest
+from middlewares.auth_middleware import get_current_active_user
+from models.user_models import User
+from dependencies import get_auth_controller  # lo agregas en dependencies.py
 
-auth_roter = APIRouter()
+auth_router = APIRouter()
 
 
-# Public routes
-@auth_roter.post('/register', status_code=200)
-def register():
+@auth_router.post("/register", status_code=201, response_model=UserResponse)
+async def register(
+    user_data: UserCreate,
+    controller: AuthController = Depends(get_auth_controller)
+):
     """
-    Registrar un nuevo usuario en el sistema.
+    Registrar un nuevo usuario.
 
-    Crea una cuenta validando previamente la unicidad del correo,
-    cifrando la contraseña y almacenando la información del usuario
-    en la base de datos. \n
-    Tras el registro, se envía un correo de bienvenida
-    para confirmar la creación de la cuenta.
+    Valida unicidad de email, hashea la contraseña y crea el registro.
 
-    1. El email no debe existir previamente en el sistema.
-    2. La contraseña se almacena hasheada, nunca en texto plano.
-    3. Solo se crea el usuario si todas las validaciones son correctas.
-    4. Este endpoint es público.
-
-    Parámetros:
-    - user (JSON): username, email, password.
-
-    Retorno:
-    - Objeto del usuario creado con su ID único.
+    ⚠️ El email debe ser único en el sistema.
     """
-    pass
+    return await controller.register(user_data)
 
 
-@auth_roter.post('/login', status_code=200)
-def login():
+@auth_router.post("/login", status_code=200, response_model=TokenResponse)
+async def login(
+    credentials: LoginRequest,
+    controller: AuthController = Depends(get_auth_controller)
+):
     """
-    Autenticar un usuario en el sistema.
+    Autenticar usuario y obtener token JWT.
 
-    Verifica las credenciales del usuario comparando el email y la contraseña
-    con los registros almacenados. Si son válidas y la cuenta está activa,
-    genera un token de acceso para futuras peticiones autenticadas.
+    Retorna un Bearer token válido por 30 minutos.
 
-    1. El usuario debe existir y estar activo.
-    2. La contraseña se valida contra su hash almacenado.
-    3. Se retorna un token solo si la autenticación es correcta.
-    4. Este endpoint es público.
-
-    Parámetros:
-    - email (string)
-    - password (string)
-
-    Retorno:
-    - Objeto del usuario autenticado con access token.
+    ⚠️ La cuenta debe estar en estado ACTIVE.
     """
-    pass
+    return await controller.login(credentials)
 
-
-# Private routes
-@auth_roter.get('/me', status_code=200)
-def me():
+@auth_router.post("/logout", status_code=200, response_model=TokenResponse)
+async def logout(
+    credentials: LoginRequest,
+    controller: AuthController = Depends(get_auth_controller)
+):
     """
-    Obtener los datos del usuario autenticado.
+    Qitar la autenticación al usuario.
 
-    Recupera toda la información del usuario asociada al token
-    proporcionado en la cabecera de autorización. Permite consultar
-    el perfil actual sin necesidad de enviar su ID explícitamente.
+    Recibe un Bearer token válido.
 
-    1. Requiere token Bearer válido.
-    2. El usuario debe estar activo.
-    3. Solo retorna información del usuario autenticado.
-    4. Endpoint protegido.
-
-    Parámetros:
-    - Authorization: Bearer token.
-
-    Retorno:
-    - Todos los datos del usuario autenticado.
+    ⚠️ Se debe eliminar el token en en frontend tambien.
     """
-    pass
+    return await controller.login(credentials)
 
 
-@auth_roter.post('/logout', status_code=200)
-def logout():
+@auth_router.get("/me", status_code=200, response_model=UserResponse)
+async def me(
+    current_user: User = Depends(get_current_active_user)
+):
     """
-    Cerrar la sesión del usuario autenticado.
+    Obtener perfil del usuario autenticado.
 
-    Invalida el token de acceso actual para impedir su reutilización
-    en futuras peticiones. Dependiendo de la implementación, puede
-    implicar blacklist de tokens o eliminación de sesión.
-
-    1. Requiere token Bearer válido.
-    2. Tras ejecutarse, el token deja de ser usable.
-
-    **Nota**.Endpoint protegido.
-
-    Parámetros:
-    - Authorization: Bearer token.
-
-    Retorno:
-    - Mensaje confirmando cierre de sesión.
+    🔒 Requiere Bearer token válido en el header Authorization.
     """
-    pass
+    return UserResponse.model_validate(current_user)
 
 
-@auth_roter.post('/change-password', status_code=200)
-def change_password():
+@auth_router.post("/change-password", status_code=200)
+async def change_password(
+    data: ChangePasswordRequest,
+    current_user: User = Depends(get_current_active_user),
+    controller: AuthController = Depends(get_auth_controller)
+):
     """
-    Cambiar la contraseña del usuario autenticado.
+    Cambiar contraseña del usuario autenticado.
 
-    Permite actualizar la contraseña validando la contraseña actual,
-    aplicando hash a la nueva y almacenándola de forma segura en la base
-    de datos.
+    🔒 Requiere Bearer token válido.
 
-    1. Requiere token Bearer válido.
-    2. Debe enviarse la contraseña actual para validación.
-    3. La nueva contraseña se almacena hasheada.
-    4. Tras el cambio, se recomienda invalidar sesiones activas.
-
-    **Nota**. Endpoint protegido.
-
-    Parámetros:
-    - current_password (string)
-    - new_password (string)
-    - Authorization: Bearer token.
-
-    Retorno:
-    - Mensaje confirmando el cambio de contraseña.
+    ⚠️ Debes enviar tu contraseña actual para confirmar.
     """
-    pass
+    return await controller.change_password(current_user.id, data)

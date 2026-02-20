@@ -8,6 +8,9 @@ from utils.smtp_email_sender import SMTPEmailSender, MockEmailSender
 from utils.template_engine import Jinja2TemplateEngine
 from interfaces.email_interfaces import IEmailSender, ITemplateEngine
 import os
+from repositories.user_repository import UserRepository
+from services.auth_service import AuthService
+from controllers.auth_controller import AuthController
 
 
 # ============================================
@@ -70,3 +73,19 @@ def get_email_controller(
 ) -> EmailController:
     """Dependency para obtener el controlador de emails"""
     return EmailController(email_service)
+
+
+def get_user_repository(db: Session = Depends(get_db)) -> UserRepository:
+    return UserRepository(db)
+
+
+def get_auth_service(
+    repository: UserRepository = Depends(get_user_repository)
+) -> AuthService:
+    return AuthService(repository)
+
+
+def get_auth_controller(
+    auth_service: AuthService = Depends(get_auth_service)
+) -> AuthController:
+    return AuthController(auth_service)

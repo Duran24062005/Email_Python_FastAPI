@@ -5,7 +5,7 @@ from config.config import app_config
 from middlewares.cors import app_cors
 from config.database.connection import init_db
 from routes.email_routes import email_router
-from routes.auth_routes import auth_roter
+from routes.auth_routes import auth_router
 from routes.user_routes import user_router
 
 app = FastAPI(
@@ -38,6 +38,6 @@ async def root():
     """
     return FileResponse("static/index.html")
 
-app.include_router(auth_roter, prefix="/api/auth", tags=["Auth"])
+app.include_router(auth_router, prefix="/api/auth", tags=["Auth"])
 app.include_router(user_router, prefix="/api/users", tags=["Users"])
 app.include_router(email_router, prefix="/emails", tags=["Emails"])
