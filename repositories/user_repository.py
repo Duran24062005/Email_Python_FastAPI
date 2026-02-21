@@ -3,7 +3,7 @@ from typing import List, Optional
 from sqlalchemy.orm import Session
 
 from interfaces.user_interfaces import IUserRepository
-from models.user_models import User
+from models.user_models import User, UserRole, UserStatus
 from schemas.user_schemas import UserCreate, UserUpdate
 
 class UserRepository(IUserRepository):
@@ -20,7 +20,9 @@ class UserRepository(IUserRepository):
         user = User(
             name=user_data.name,
             email=user_data.email,
-            hash_password=user_data.password
+            hash_password=user_data.password,
+            role=UserRole.GENERAL,
+            status=UserStatus.ACTIVE
         )
 
         self.db.add(user)
@@ -30,8 +32,12 @@ class UserRepository(IUserRepository):
         return User
 
     async def get_by_id(self, user_id: int) -> Optional[User]:
-        """Obtiene un usuario por su ID"""
+        """Obtiene un usuario que están en pending"""
         return self.db.query(User).filter(User.id == user_id).first()
+    
+    async def get_pending_users(self) -> Optional[List[User]]:
+        """Obtiene un usuario por su ID"""
+        return self.db.query(User).filter(User.status.lower() == "PENDING".lower()).all()
     
     async def get_by_email(self, user_email: str) -> Optional[User]:
         """Obtiene un usuario por su EMAIL"""
@@ -47,11 +53,23 @@ class UserRepository(IUserRepository):
 
     async def delete(self, user_id: int) -> bool:
         """Elimina un usuario"""
-        pass
+        user = self.db.query(User).filter(User.id == user_id).first()
+        if user: 
+            self.db.delete(user)
+            self.db.commit()
+        return False
+
 
     async def create_with_hash(self, name: str, email: str, hashed_password: str) -> User:
         """Crea usuario con contraseña ya hasheada"""
-        user = User(name=name, email=email, hash_password=hashed_password)
+        user = User(
+            name=name,
+            email=email,
+            hash_password=hashed_password,
+            role=UserRole.GENERAL,
+            status=UserStatus.ACTIVE,
+            email_verify=False
+        )
         self.db.add(user)
         self.db.commit()
         self.db.refresh(user)

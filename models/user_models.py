@@ -41,3 +41,4 @@ class User(Base):
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
 
     emails = relationship("Email", back_populates="user", uselist=True)  # ← "emails" plural
+    
