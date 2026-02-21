@@ -18,6 +18,7 @@ class EmailRepository(IEmailRepository):
     async def create(self, email_data: EmailCreate) -> Email:
         """Crea un nuevo registro de email en la base de datos"""
         email = Email(
+            user_id=email_data.user_id,
             recipient=email_data.recipient,
             subject=email_data.subject,
             body=email_data.body,

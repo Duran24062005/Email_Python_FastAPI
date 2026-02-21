@@ -21,7 +21,12 @@ class Email(Base):
     body = Column(Text, nullable=True)
     html_body = Column(Text, nullable=True)
     status = Column(
-        Enum(EmailStatus, name='emailstatus', create_type=False),
+        Enum(
+            EmailStatus, 
+            name='emailstatus', 
+            create_type=False,
+            values_callable=lambda obj: [e.value for e in obj]
+        ),
         default=EmailStatus.PENDING,
         nullable=False
     )

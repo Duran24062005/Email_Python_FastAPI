@@ -2,7 +2,7 @@ from fastapi import HTTPException, status
 from repositories.user_repository import UserRepository
 from schemas.user_schemas import UserCreate, UserResponse, LoginRequest, TokenResponse, ChangePasswordRequest
 from core.security import hash_password, verify_password, create_access_token
-from core.exceptions import EmailAlreadyExists, WeakPassword
+from core.exceptions import EmailAlreadyExists
 from models.user_models import UserStatus
 
 

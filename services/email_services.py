@@ -38,6 +38,7 @@ class EmailService:
         # 2. Crear registro en la base de datos
         email_record = await self.repository.create(
             EmailCreate(
+                user_id=email_data.user_id,
                 recipient=email_data.recipient,
                 subject=email_data.subject,
                 body=body,

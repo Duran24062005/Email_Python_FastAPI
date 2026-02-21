@@ -37,20 +37,6 @@ async def login(
     """
     return await controller.login(credentials)
 
-@auth_router.post("/logout", status_code=200, response_model=TokenResponse)
-async def logout(
-    credentials: LoginRequest,
-    controller: AuthController = Depends(get_auth_controller)
-):
-    """
-    Qitar la autenticación al usuario.
-
-    Recibe un Bearer token válido.
-
-    🔒 Requiere Bearer token válido en el header Authorization.
-    """
-    return await controller.login(credentials)
-
 
 @auth_router.get("/me", status_code=200, response_model=UserResponse)
 async def me(
