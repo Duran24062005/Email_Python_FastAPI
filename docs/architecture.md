@@ -1,414 +1,399 @@
-# 🏗️ Guía de Arquitectura - Email Python FastAPI
+# 🏗️ Arquitectura — Email Python FastAPI
 
-## 📊 Diagrama de Flujo
+> Este documento describe la arquitectura en capas, los principios SOLID aplicados y los flujos de datos del sistema completo, incluyendo los módulos de autenticación, usuarios y emails agregados en v1.0.
+
+---
+
+## 📊 Diagrama General del Sistema
 
 ```
-┌─────────────┐
-│   Cliente   │
-│  (Browser)  │
-└──────┬──────┘
-       │
-       │ HTTP Request
-       ▼
-┌─────────────────────────────────────────┐
-│           FastAPI Routes                │
-│       (email_routes.py)                 │
-│  - Define endpoints                     │
-│  - Validación básica de parámetros      │
-└──────────────┬──────────────────────────┘
-               │
-               │ Inyección de dependencias
-               ▼
-┌─────────────────────────────────────────┐
-│         Email Controller                │
-│    (email_controller.py)                │
-│  - Maneja peticiones HTTP               │
-│  - Valida datos de entrada              │
-│  - Maneja errores HTTP                  │
-│  - Retorna respuestas HTTP              │
-└──────────────┬──────────────────────────┘
-               │
-               │ Llama métodos de negocio
-               ▼
-┌─────────────────────────────────────────┐
-│          Email Service                  │
-│       (email_service.py)                │
-│  - Lógica de negocio                    │
-│  - Orquesta operaciones                 │
-│  - Prepara contenido de emails          │
-└──────┬────────────┬─────────────────────┘
-       │            │
-       │            │ Renderiza plantilla
-       │            ▼
-       │   ┌──────────────────┐
-       │   │ Template Engine  │
-       │   │ (Jinja2)         │
-       │   └──────────────────┘
-       │
-       │ Guarda/Lee datos
-       ▼
-┌─────────────────────┐      ┌──────────────────┐
-│  Email Repository   │      │  Email Sender    │
-│  (SQL Database)     │      │  (SMTP)          │
-└─────────────────────┘      └──────────────────┘
+┌──────────────────────────────────────────────────────────┐
+│                        HTTP Client                       │
+└──────┬───────────────────┬───────────────────────────────┘
+       │                   │
+  /api/auth/*         /api/users/*          /emails/*
+       │                   │                    │
+┌──────▼───────────────────▼────────────────────▼──────────┐
+│                        main.py                           │
+│  FastAPI app · startup(init_db) · CORSMiddleware         │
+│  auth_router · user_router · email_router                │
+└────────────────────────┬─────────────────────────────────┘
+                         │
+         ┌───────────────┼───────────────┐
+         │               │               │
+  ┌──────▼──────┐ ┌──────▼──────┐ ┌─────▼───────┐
+  │ auth_routes │ │ user_routes │ │email_routes │
+  └──────┬──────┘ └──────┬──────┘ └─────┬───────┘
+         │               │               │
+    Depends()       Depends()       Depends()
+         │               │               │
+  ┌──────▼──────┐ ┌──────▼──────┐ ┌─────▼───────────┐
+  │auth_middlew │ │role_middlew │ │ (sin auth)       │
+  │get_current  │ │require_admin│ │                  │
+  │_active_user │ │             │ │                  │
+  └──────┬──────┘ └──────┬──────┘ └─────┬───────────┘
+         │               │               │
+  ┌──────▼──────┐ ┌──────▼──────┐ ┌─────▼───────┐
+  │AuthControll │ │UserControll │ │EmailControl │
+  └──────┬──────┘ └──────┬──────┘ └─────┬───────┘
+         │               │               │
+  ┌──────▼──────┐ ┌──────▼──────┐ ┌─────▼───────┐
+  │AuthService  │ │UserService  │ │EmailService │
+  └──────┬──────┘ └──────┬──────┘ └─────┬───────┘
+         │               │               │
+    ┌────┴──────────────┬┘        ┌──────┘
+    │                   │         │
+┌───▼────┐      ┌───────▼──┐  ┌──▼──────────────────┐
+│UserRepo│      │EmailRepo │  │  IEmailSender        │
+└───┬────┘      └───────┬──┘  │  ITemplateEngine     │
+    │                   │     └──────────────────────┘
+    └─────────┬─────────┘
+        ┌─────▼──────┐
+        │ PostgreSQL  │
+        │ users+email │
+        └────────────┘
 ```
 
-## 🎯 Principios SOLID en Detalle
+---
 
-### 1️⃣ Single Responsibility Principle (SRP)
+## 🎯 Principios SOLID Aplicados
+
+### 1️⃣ Single Responsibility Principle
 
 **"Una clase debe tener una sola razón para cambiar"**
 
-#### ✅ Implementación en el proyecto:
+El sistema separa claramente cada responsabilidad en una clase distinta:
 
 ```python
-# ❌ MAL - Una clase hace demasiado
-class EmailManager:
-    def send_email(self, data):
-        # Validar datos
-        # Conectar a BD
-        # Renderizar plantilla
-        # Enviar email SMTP
-        # Guardar registro
-        pass
+# Cada clase tiene UN único propósito
 
-# ✅ BIEN - Responsabilidades separadas
-class EmailController:
-    # Solo maneja HTTP
-    def send_email(self, data): ...
-
-class EmailService:
-    # Solo lógica de negocio
-    def send_email(self, data): ...
-
-class EmailRepository:
-    # Solo acceso a datos
-    def create(self, email): ...
+class UserRepository:
+    # Solo lee/escribe en la tabla users
+    async def get_by_id(self, user_id: int): ...
+    async def update_status(self, user_id: int, status: UserStatus): ...
 
 class SMTPEmailSender:
-    # Solo envío de emails
-    def send(self, recipient, subject, body): ...
+    # Solo envía emails por SMTP
+    async def send(self, recipient, subject, body, html_body): ...
+
+class Jinja2TemplateEngine:
+    # Solo renderiza plantillas HTML
+    def render(self, template_name, context): ...
+
+class AuthService:
+    # Solo gestiona identidad: registro, login, cambio de contraseña
+    async def register(self, user_data): ...
+    async def login(self, credentials): ...
+
+class UserService:
+    # Solo gestiona el ciclo de vida del usuario y sus emails
+    async def get_my_inbox(self, user_id, page, page_size): ...
+    async def approve_user(self, user_id): ...
+
+class AuthController:
+    # Solo traduce DomainError → HTTPException
+    async def register(self, user_data) -> UserResponse: ...
 ```
 
-**Beneficio**: Si cambias la forma de enviar emails, solo modificas `SMTPEmailSender`.
+**Consecuencia:** si cambia el protocolo de envío de email, solo se modifica `SMTPEmailSender`. Si cambia la lógica de aprobación de usuarios, solo se modifica `UserService`.
 
 ---
 
-### 2️⃣ Open/Closed Principle (OCP)
+### 2️⃣ Open/Closed Principle
 
 **"Abierto para extensión, cerrado para modificación"**
 
-#### ✅ Implementación en el proyecto:
+Las interfaces permiten agregar implementaciones sin tocar el código existente:
 
 ```python
-# Interfaz base
+# Interfaz base — nunca se modifica
 class IEmailSender(ABC):
     @abstractmethod
-    async def send(self, recipient, subject, body, html_body=None): pass
+    async def send(self, recipient, subject, body, html_body=None) -> bool: ...
 
-# Implementación 1: SMTP
+# ✅ Implementación 1 — existe
 class SMTPEmailSender(IEmailSender):
-    async def send(self, recipient, subject, body, html_body=None):
-        # Lógica SMTP
-        pass
+    async def send(self, recipient, subject, body, html_body=None) -> bool:
+        # lógica SMTP
+        ...
 
-# Implementación 2: SendGrid (EXTENSIÓN, no modificación)
+# ✅ Implementación 2 — existe
+class MockEmailSender(IEmailSender):
+    async def send(self, recipient, subject, body, html_body=None) -> bool:
+        print("📧 MOCK EMAIL")
+        return True
+
+# ✅ Implementación 3 — se puede agregar SIN modificar nada
 class SendGridEmailSender(IEmailSender):
-    async def send(self, recipient, subject, body, html_body=None):
-        # Lógica SendGrid
-        pass
-
-# Implementación 3: AWS SES (otra extensión)
-class AWSEmailSender(IEmailSender):
-    async def send(self, recipient, subject, body, html_body=None):
-        # Lógica AWS SES
-        pass
+    def __init__(self, api_key: str): ...
+    async def send(self, recipient, subject, body, html_body=None) -> bool:
+        # lógica SendGrid
+        ...
 ```
 
-**Beneficio**: Puedes agregar nuevos proveedores de email sin tocar código existente.
-
----
-
-### 3️⃣ Liskov Substitution Principle (LSP)
-
-**"Los objetos de una clase derivada deben poder reemplazar a los de la clase base sin afectar la funcionalidad"**
-
-#### ✅ Implementación en el proyecto:
+Para usar `SendGridEmailSender`, solo se cambia `dependencies.py`:
 
 ```python
-# El servicio NO sabe qué implementación usa
-class EmailService:
-    def __init__(self, sender: IEmailSender):  # ← Acepta la interfaz
-        self.sender = sender
-    
-    async def send_email(self, email_data):
-        # Funciona con CUALQUIER implementación de IEmailSender
-        await self.sender.send(...)
-
-# Todas estas son intercambiables:
-service1 = EmailService(SMTPEmailSender())      # Producción
-service2 = EmailService(MockEmailSender())      # Testing
-service3 = EmailService(SendGridEmailSender())  # Alternativa
+def get_email_sender() -> IEmailSender:
+    provider = os.getenv("EMAIL_PROVIDER", "smtp")
+    if provider == "sendgrid":
+        return SendGridEmailSender(os.getenv("SENDGRID_API_KEY"))
+    elif os.getenv("ENVIRONMENT") == "production":
+        return SMTPEmailSender(...)
+    return MockEmailSender()
 ```
 
-**Beneficio**: Puedes intercambiar implementaciones sin romper nada.
+Lo mismo aplica para `ITemplateEngine`: se puede agregar `MakoTemplateEngine` o `HandlebarsTemplateEngine` sin modificar `EmailService` ni `UserService`.
 
 ---
 
-### 4️⃣ Interface Segregation Principle (ISP)
+### 3️⃣ Liskov Substitution Principle
+
+**"Los objetos de una subclase deben poder reemplazar a los de la clase base sin romper el comportamiento"**
+
+`MockEmailSender` reemplaza completamente a `SMTPEmailSender`:
+
+```python
+# EmailService no sabe si usa SMTP o Mock
+class EmailService:
+    def __init__(self, sender: IEmailSender):  # ← acepta la interfaz
+        self.sender = sender
+
+    async def send_email(self, email_data):
+        success = await self.sender.send(...)   # funciona con cualquier impl
+        ...
+
+# Ambas son intercambiables sin cambiar EmailService:
+service_prod = EmailService(SMTPEmailSender(...))   # producción
+service_dev  = EmailService(MockEmailSender())       # desarrollo/testing
+```
+
+---
+
+### 4️⃣ Interface Segregation Principle
 
 **"Los clientes no deben depender de interfaces que no usan"**
 
-#### ✅ Implementación en el proyecto:
+Las interfaces son específicas y pequeñas:
 
 ```python
-# ❌ MAL - Interfaz muy grande
+# ❌ MAL — interfaz dios
 class IEmailManager(ABC):
-    @abstractmethod
-    def send(self): pass
-    
-    @abstractmethod
-    def save_to_db(self): pass
-    
-    @abstractmethod
-    def render_template(self): pass
-    
-    @abstractmethod
-    def validate_email(self): pass
+    def send(self): ...
+    def save_to_db(self): ...
+    def render_template(self): ...
+    def validate_address(self): ...
 
-# ✅ BIEN - Interfaces específicas
-class IEmailSender(ABC):
-    @abstractmethod
-    def send(self): pass
+# ✅ BIEN — interfaces cohesivas y pequeñas
 
-class IEmailRepository(ABC):
-    @abstractmethod
-    def create(self): pass
-    @abstractmethod
-    def get_by_id(self): pass
+class IEmailSender(ABC):         # 1 método
+    async def send(self, ...): ...
 
-class ITemplateEngine(ABC):
-    @abstractmethod
-    def render(self): pass
+class ITemplateEngine(ABC):      # 1 método
+    def render(self, template_name, context): ...
+
+class IEmailRepository(ABC):     # 6 métodos cohesivos
+    async def create(self, ...): ...
+    async def get_by_id(self, ...): ...
+    async def get_all(self, ...): ...
+    async def update(self, ...): ...
+    async def delete(self, ...): ...
+    async def count(self): ...
+
+class IUserRepository(ABC):      # 6 métodos cohesivos
+    async def create(self, ...): ...
+    async def get_by_id(self, ...): ...
+    # ...
 ```
 
-**Beneficio**: Cada componente implementa solo lo que necesita.
+`EmailService` recibe `IEmailSender` e `ITemplateEngine` por separado. Si solo necesita enviar emails, puede recibir solo `IEmailSender` sin `ITemplateEngine`.
 
 ---
 
-### 5️⃣ Dependency Inversion Principle (DIP)
+### 5️⃣ Dependency Inversion Principle
 
 **"Depende de abstracciones, no de concreciones"**
 
-#### ✅ Implementación en el proyecto:
-
 ```python
-# ❌ MAL - Dependencia directa de implementación
+# ❌ MAL — acoplamiento fuerte
 class EmailService:
     def __init__(self):
-        self.repository = EmailRepository()  # ← Acoplamiento fuerte
-        self.sender = SMTPEmailSender()      # ← Acoplamiento fuerte
+        self.repository = EmailRepository(db)       # concreta
+        self.sender     = SMTPEmailSender()          # concreta
+        self.engine     = Jinja2TemplateEngine()     # concreta
 
-# ✅ BIEN - Dependencia de abstracción
+# ✅ BIEN — depende de interfaces
 class EmailService:
     def __init__(
         self,
-        repository: IEmailRepository,  # ← Interfaz
-        sender: IEmailSender           # ← Interfaz
+        repository: IEmailRepository,     # ← interfaz
+        sender: IEmailSender,             # ← interfaz
+        template_engine: ITemplateEngine  # ← interfaz
     ):
         self.repository = repository
         self.sender = sender
+        self.template_engine = template_engine
 ```
 
-**Beneficio**: Fácil de testear y cambiar implementaciones.
+El wiring concreto ocurre únicamente en `dependencies.py`:
+
+```python
+def get_email_service(
+    repository: EmailRepository = Depends(get_email_repository),
+    sender: IEmailSender = Depends(get_email_sender),
+    template_engine: ITemplateEngine = Depends(get_template_engine)
+) -> EmailService:
+    return EmailService(repository, sender, template_engine)
+```
 
 ---
 
 ## 🔄 Flujo de Datos Completo
 
-### Ejemplo: Enviar email con plantilla
+### Ejemplo: Enviar email con plantilla (usuario autenticado)
 
-```python
-# 1️⃣ Cliente hace petición HTTP
-POST /emails/send
-{
-    "recipient": "juan@example.com",
-    "subject": "Bienvenido",
-    "template_name": "welcome.html",
-    "template_data": {"nombre": "Juan", "empresa": "TechCorp"}
-}
+```
+1. Cliente HTTP
+   POST /api/users/me/send-template
+   Authorization: Bearer eyJhbGci...
+   { "recipient": "...", "subject": "...", "template_name": "welcome.html", "template_data": {...} }
 
-# 2️⃣ FastAPI Route recibe la petición
-@email_router.post("/send")
-async def send_email(
-    email: EmailCreate,
-    controller: EmailController = Depends(get_email_controller)
-):
-    return await controller.send_email(email)
+2. user_routes.py
+   @user_router.post("/me/send-template")
+   async def send_with_template(
+       data: SendWithTemplateRequest,
+       current_user = Depends(get_current_active_user),  ← valida JWT + status
+       controller   = Depends(get_user_controller)
+   )
 
-# 3️⃣ Controller valida y delega
-class EmailController:
-    async def send_email(self, email_data: EmailCreate):
-        # Validación HTTP
-        result = await self.email_service.send_email(email_data)
-        # Manejo de errores HTTP
-        return result
+3. auth_middleware.py (get_current_active_user)
+   ├─ HTTPBearer extrae el token del header Authorization
+   ├─ decode_access_token(token) → payload
+   ├─ UserRepository.get_by_id(payload["sub"]) → User
+   └─ verifica user.status == ACTIVE → 403 si no
 
-# 4️⃣ Service ejecuta lógica de negocio
-class EmailService:
-    async def send_email(self, email_data):
-        # a) Renderizar plantilla
-        html = self.template_engine.render(
-            "welcome.html",
-            {"nombre": "Juan", "empresa": "TechCorp"}
-        )
-        
-        # b) Guardar en BD
-        email_record = await self.repository.create(email_data)
-        
-        # c) Enviar email
-        success = await self.sender.send(
-            recipient="juan@example.com",
-            subject="Bienvenido",
-            body="...",
-            html_body=html
-        )
-        
-        # d) Actualizar estado
-        if success:
-            await self.repository.update_status(email_record.id, "sent")
-        
-        return email_record
+4. UserController.send_with_template(current_user, data)
+   └─ delega a UserService.send_email_with_template(...)
 
-# 5️⃣ Repository guarda en base de datos
-class EmailRepository:
-    async def create(self, email_data):
-        email = Email(**email_data.dict())
-        self.db.add(email)
-        self.db.commit()
-        return email
+5. UserService.send_email_with_template(user_id, recipient, subject, template_name, template_data)
+   ├─ a) Jinja2TemplateEngine.render("welcome.html", template_data)
+   │      → FileNotFoundError → HTTPException 404 si no existe
+   ├─ b) EmailRepository.create(EmailCreate) → Email(status=PENDING)
+   ├─ c) IEmailSender.send(recipient, subject, body, html_body)
+   │      → SMTPEmailSender (prod) o MockEmailSender (dev)
+   └─ d) EmailRepository.update_status(id, SENT | FAILED)
 
-# 6️⃣ EmailSender envía el email
-class SMTPEmailSender:
-    async def send(self, recipient, subject, body, html_body):
-        # Conectar SMTP y enviar
-        return True
-
-# 7️⃣ Respuesta al cliente
-{
-    "id": 1,
-    "recipient": "juan@example.com",
-    "subject": "Bienvenido",
-    "status": "sent",
-    "sent_at": "2024-01-15T10:30:00"
-}
+6. Respuesta al cliente
+   201 Created
+   { "id": 7, "recipient": "...", "status": "sent", "sent_at": "...", ... }
 ```
 
 ---
 
 ## 🧩 Inyección de Dependencias
 
-### ¿Cómo funciona?
+FastAPI resuelve automáticamente el árbol de dependencias en cada request. `dependencies.py` es el único lugar donde se ensambla el grafo de objetos:
 
 ```python
-# dependencies.py - Define cómo crear las instancias
+# dependencies.py — el único "lugar de ensamblaje"
+
+# INFRAESTRUCTURA
+def get_db() -> Generator[Session]:
+    db = SessionLocal()
+    try: yield db
+    finally: db.close()
 
 def get_email_sender() -> IEmailSender:
-    """Factory que decide qué implementación usar"""
     if os.getenv("ENVIRONMENT") == "production":
-        return SMTPEmailSender()
-    else:
-        return MockEmailSender()
+        port = int(os.getenv("SMTP_PORT", "587"))
+        return SMTPEmailSender(use_tls=(port==587), use_ssl=(port==465))
+    return MockEmailSender()
 
-def get_email_repository(db: Session = Depends(get_db)):
-    """Crea el repositorio con la sesión de BD"""
+def get_template_engine() -> ITemplateEngine:
+    return Jinja2TemplateEngine(templates_dir="templates")
+
+# REPOSITORIOS
+def get_email_repository(db = Depends(get_db)) -> EmailRepository:
     return EmailRepository(db)
 
-def get_email_service(
-    repository: EmailRepository = Depends(get_email_repository),
-    sender: IEmailSender = Depends(get_email_sender),
-    template_engine: ITemplateEngine = Depends(get_template_engine)
-):
-    """Ensambla el servicio con todas sus dependencias"""
-    return EmailService(repository, sender, template_engine)
+def get_user_repository(db = Depends(get_db)) -> UserRepository:
+    return UserRepository(db)
 
-def get_email_controller(
-    email_service: EmailService = Depends(get_email_service)
-):
-    """Crea el controlador con el servicio"""
-    return EmailController(email_service)
+# SERVICIOS
+def get_auth_service(
+    repository = Depends(get_user_repository),
+    sender     = Depends(get_email_sender),
+    template   = Depends(get_template_engine)
+) -> AuthService:
+    return AuthService(repository, sender, template)
+
+# CONTROLADORES
+def get_auth_controller(
+    auth_service = Depends(get_auth_service)
+) -> AuthController:
+    return AuthController(auth_service)
 ```
 
-### En los endpoints:
+FastAPI resuelve `get_auth_controller` → `get_auth_service` → `get_user_repository` → `get_db` automáticamente por cada request, con el ciclo de vida correcto (la sesión de BD se cierra al terminar).
+
+---
+
+## 📦 Separación de Responsabilidades por Servicio
+
+| Servicio | Responsabilidad | NO hace |
+|---|---|---|
+| `AuthService` | Registro, login, cambio de contraseña, token de verificación | Gestión de perfil, bandeja de emails |
+| `UserService` | Perfil, bandeja, reenvío, envío con plantilla, email_key, funciones admin | Login, hashing de contraseñas |
+| `EmailService` | Pipeline CRUD de emails, envío directo, paginación global | Gestión de usuarios, autenticación |
+
+Esta separación evita el antipatrón "god service" y facilita el mantenimiento independiente de cada área.
+
+---
+
+## 🧪 Testabilidad
+
+La arquitectura facilita el testing unitario sin infraestructura real:
 
 ```python
-@email_router.post("/send")
-async def send_email(
-    email: EmailCreate,
-    controller: EmailController = Depends(get_email_controller)
-    # ↑ FastAPI inyecta automáticamente todas las dependencias
-):
-    return await controller.send_email(email)
-```
+# test_user_service.py (ejemplo)
 
-**Beneficio**: 
-- No necesitas instanciar manualmente nada
-- Fácil cambiar implementaciones en un solo lugar
-- Excelente para testing
+class MockUserRepository:
+    async def get_by_id(self, user_id): return User(id=1, name="Test", ...)
+    async def update_status(self, user_id, status): pass
 
----
+class MockEmailRepository:
+    async def get_by_user_id(self, user_id, skip, limit): return []
+    async def count_by_user(self, user_id): return 0
 
-## 🧪 Testing Facilitado
+class MockSender:
+    async def send(self, recipient, subject, body, html_body=None): return True
 
-Gracias a SOLID, el testing es muy fácil:
+# Servicio completamente testeado sin BD ni SMTP:
+service = UserService(
+    user_repository=MockUserRepository(),
+    email_repository=MockEmailRepository(),
+    sender=MockSender(),
+    template_engine=None
+)
 
-```python
-# test_email_service.py
-
-class MockRepository(IEmailRepository):
-    async def create(self, email_data):
-        return Email(id=1, **email_data.dict())
-
-class MockSender(IEmailSender):
-    async def send(self, recipient, subject, body, html_body):
-        return True
-
-# Test
-def test_send_email():
-    # Usar mocks en lugar de implementaciones reales
-    service = EmailService(
-        repository=MockRepository(),
-        sender=MockSender(),
-        template_engine=None
-    )
-    
-    result = await service.send_email(email_data)
-    assert result.status == "sent"
+result = await service.get_my_inbox(user_id=1, page=1, page_size=10)
+assert result.total == 0
 ```
 
 ---
 
-## 📚 Ventajas de esta Arquitectura
+## 🚀 Extensibilidad — Próximos Pasos
 
-| Aspecto | Beneficio |
-|---------|-----------|
-| **Mantenibilidad** | Cada componente tiene responsabilidad clara |
-| **Escalabilidad** | Fácil agregar nuevas funcionalidades |
-| **Testabilidad** | Cada capa se prueba independientemente |
-| **Flexibilidad** | Cambiar implementaciones sin afectar el resto |
-| **Legibilidad** | Código organizado y autodocumentado |
-
----
-
-## 🚀 Próximos Pasos Sugeridos
-
-1. **Agregar cache**: Cachear plantillas renderizadas frecuentes
-2. **Agregar colas**: Usar Celery/RQ para envíos asíncronos masivos
-3. **Agregar logs**: Sistema de logging estructurado
-4. **Agregar métricas**: Rastrear tasa de éxito de envíos
-5. **Agregar autenticación**: JWT para proteger endpoints
-6. **Agregar rate limiting**: Prevenir abuso del servicio
+| Extensión | Dónde agregar | Qué no se modifica |
+|---|---|---|
+| Proveedor SendGrid/AWS SES | `utils/sendgrid_sender.py` + `dependencies.py` | Servicios, controladores, rutas |
+| Motor de plantillas alternativo | `utils/mako_engine.py` + `dependencies.py` | Servicios, controladores, rutas |
+| Cola de emails (Celery) | Nuevo servicio + `dependencies.py` | Lógica de negocio existente |
+| Nuevo rol (moderador) | `models/user_models.py` + `middlewares/` | Código de usuario/admin existente |
+| Rate limiting | `middlewares/` + `main.py` | Lógica de negocio |
+| Logging estructurado | `core/logger.py` + reemplazar `print()` | Lógica de negocio |
+| Tests | `tests/` con mocks | Código de producción |
 
 ---
 
-**¿Preguntas?** Revisa el código, todo está documentado con comentarios explicativos. 🎓
+*Documentado: Febrero 2026 — Email Python FastAPI v1.0.0*
