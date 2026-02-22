@@ -1,64 +1,33 @@
 from typing import List, Optional
-
+from datetime import datetime
 from sqlalchemy.orm import Session
-
 from interfaces.user_interfaces import IUserRepository
 from models.user_models import User, UserRole, UserStatus
 from schemas.user_schemas import UserCreate, UserUpdate
 
+
 class UserRepository(IUserRepository):
     """
-    Implementación del repositorio de users usando SQLAlchemy
-    (Single Responsability: solo maneja acceso a datos)
+    Implementación del repositorio de usuarios usando SQLAlchemy.
+    (Single Responsibility: solo maneja acceso a datos)
     """
 
     def __init__(self, db: Session):
         self.db = db
 
     async def create(self, user_data: UserCreate) -> User:
-        """Crea un nuevo registro de usuario en la base de datos"""
         user = User(
             name=user_data.name,
             email=user_data.email,
             hash_password=user_data.password,
             role=UserRole.GENERAL,
-            status=UserStatus.ACTIVE
+            status=UserStatus.ACTIVE,
+            email_verify=False
         )
-
         self.db.add(user)
         self.db.commit()
-        self.db.refresh()
-
-        return User
-
-    async def get_by_id(self, user_id: int) -> Optional[User]:
-        """Obtiene un usuario que están en pending"""
-        return self.db.query(User).filter(User.id == user_id).first()
-    
-    async def get_pending_users(self) -> Optional[List[User]]:
-        """Obtiene un usuario por su ID"""
-        return self.db.query(User).filter(User.status.lower() == "PENDING".lower()).all()
-    
-    async def get_by_email(self, user_email: str) -> Optional[User]:
-        """Obtiene un usuario por su EMAIL"""
-        return self.db.query(User).filter(User.email == user_email).first()
-
-    async def get_all(self, skip: int = 0, limit: int = 100) -> List[User]:
-        """Obtiene lista de usuarios con paginación"""
-        return self.db.query(User).offset(skip).limit(limit).all()
-
-    async def update(self, user_id: int, user_data: UserUpdate) -> Optional[User]:
-        """Actualiza un usuario existente"""
-        pass
-
-    async def delete(self, user_id: int) -> bool:
-        """Elimina un usuario"""
-        user = self.db.query(User).filter(User.id == user_id).first()
-        if user: 
-            self.db.delete(user)
-            self.db.commit()
-        return False
-
+        self.db.refresh(user)
+        return user
 
     async def create_with_hash(self, name: str, email: str, hashed_password: str) -> User:
         """Crea usuario con contraseña ya hasheada"""
@@ -75,8 +44,64 @@ class UserRepository(IUserRepository):
         self.db.refresh(user)
         return user
 
+    async def get_by_id(self, user_id: int) -> Optional[User]:
+        return self.db.query(User).filter(User.id == user_id).first()
+
+    async def get_by_email(self, user_email: str) -> Optional[User]:
+        return self.db.query(User).filter(User.email == user_email).first()
+
+    async def get_all(self, skip: int = 0, limit: int = 100) -> List[User]:
+        return self.db.query(User).offset(skip).limit(limit).all()
+
+    async def get_pending_users(self) -> List[User]:
+        """Retorna todos los usuarios con estado PENDING"""
+        return self.db.query(User).filter(
+            User.status == UserStatus.PENDING
+        ).all()
+
+    async def update(self, user_id: int, user_data: UserUpdate) -> Optional[User]:
+        """Actualiza campos de un usuario existente"""
+        user = await self.get_by_id(user_id)
+        if not user:
+            return None
+
+        update_data = user_data.model_dump(exclude_unset=True)
+        for field, value in update_data.items():
+            setattr(user, field, value)
+
+        user.updated_at = datetime.utcnow()
+        self.db.commit()
+        self.db.refresh(user)
+        return user
+
+    async def update_status(self, user_id: int, new_status: UserStatus) -> Optional[User]:
+        """Actualiza solo el estado de un usuario"""
+        user = await self.get_by_id(user_id)
+        if not user:
+            return None
+        user.status = new_status
+        user.updated_at = datetime.utcnow()
+        self.db.commit()
+        self.db.refresh(user)
+        return user
+
+    async def update_email_key(self, user_id: int, email_key: str) -> None:
+        """Guarda la clave SMTP personal del usuario"""
+        user = await self.get_by_id(user_id)
+        if user:
+            user.email_key = email_key
+            user.updated_at = datetime.utcnow()
+            self.db.commit()
+
+    async def set_email_verified(self, user_id: int) -> None:
+        """Marca el email del usuario como verificado"""
+        user = await self.get_by_id(user_id)
+        if user:
+            user.email_verify = True
+            user.updated_at = datetime.utcnow()
+            self.db.commit()
+
     async def update_last_login(self, user_id: int) -> None:
-        from datetime import datetime
         user = await self.get_by_id(user_id)
         if user:
             user.last_login = datetime.utcnow()
@@ -86,9 +111,16 @@ class UserRepository(IUserRepository):
         user = await self.get_by_id(user_id)
         if user:
             user.hash_password = hashed_password
+            user.updated_at = datetime.utcnow()
             self.db.commit()
 
+    async def delete(self, user_id: int) -> bool:
+        user = await self.get_by_id(user_id)
+        if not user:
+            return False
+        self.db.delete(user)
+        self.db.commit()
+        return True
 
     async def count(self) -> int:
-        """Cuenta total de usuarios"""
-        pass
+        return self.db.query(User).count()

@@ -2,90 +2,102 @@ from fastapi import Depends
 from sqlalchemy.orm import Session
 from config.database.connection import get_db
 from repositories.email_repository import EmailRepository
+from repositories.user_repository import UserRepository
 from services.email_services import EmailService
+from services.auth_service import AuthService
+from services.user_service import UserService
 from controllers.emails_controller import EmailController
+from controllers.auth_controller import AuthController
+from controllers.user_controller import UserController
 from utils.smtp_email_sender import SMTPEmailSender, MockEmailSender
 from utils.template_engine import Jinja2TemplateEngine
 from interfaces.email_interfaces import IEmailSender, ITemplateEngine
 import os
-from repositories.user_repository import UserRepository
-from services.auth_service import AuthService
-from controllers.auth_controller import AuthController
 
 
-# ============================================
-# CONFIGURACIÓN DE DEPENDENCIAS
-# ============================================
+# ════════════════════════════════════════════════
+# FACTORIES DE INFRAESTRUCTURA
+# ════════════════════════════════════════════════
 
 def get_email_sender() -> IEmailSender:
     """
-    Factory para obtener el sender de emails apropiado
-    (Dependency Inversion: retorna interface, no implementación concreta)
+    Retorna el sender apropiado según el entorno.
+    En producción usa SMTP real, en desarrollo usa Mock.
     """
-    # En producción usa SMTP real, en desarrollo usa Mock
     env = os.getenv("ENVIRONMENT", "development")
-    
+
     if env == "production":
         port = int(os.getenv("SMTP_PORT", "587"))
-        # Puerto 465 requiere SSL, puerto 587 requiere TLS
         use_ssl = (port == 465)
         use_tls = (port == 587)
-        
-        return SMTPEmailSender(
-            use_tls=use_tls,
-            use_ssl=use_ssl
-        )
+        return SMTPEmailSender(use_tls=use_tls, use_ssl=use_ssl)
     else:
         return MockEmailSender()
 
 
 def get_template_engine() -> ITemplateEngine:
-    """
-    Factory para obtener el motor de plantillas
-    """
-    
     return Jinja2TemplateEngine(templates_dir="templates")
 
 
-# ============================================
-# DEPENDENCIAS PARA FASTAPI
-# ============================================
+# ════════════════════════════════════════════════
+# REPOSITORIES
+# ════════════════════════════════════════════════
 
 def get_email_repository(db: Session = Depends(get_db)) -> EmailRepository:
-    """Dependency para obtener el repositorio de emails"""
     return EmailRepository(db)
-
-
-def get_email_service(
-    repository: EmailRepository = Depends(get_email_repository),
-    sender: IEmailSender = Depends(get_email_sender),
-    template_engine: ITemplateEngine = Depends(get_template_engine)
-) -> EmailService:
-    """
-    Dependency para obtener el servicio de emails
-    (Inyección de dependencias completa)
-    """
-    return EmailService(repository, sender, template_engine)
-
-
-def get_email_controller(
-    email_service: EmailService = Depends(get_email_service)
-) -> EmailController:
-    """Dependency para obtener el controlador de emails"""
-    return EmailController(email_service)
 
 
 def get_user_repository(db: Session = Depends(get_db)) -> UserRepository:
     return UserRepository(db)
 
 
+# ════════════════════════════════════════════════
+# SERVICES
+# ════════════════════════════════════════════════
+
+def get_email_service(
+    repository: EmailRepository = Depends(get_email_repository),
+    sender: IEmailSender = Depends(get_email_sender),
+    template_engine: ITemplateEngine = Depends(get_template_engine)
+) -> EmailService:
+    return EmailService(repository, sender, template_engine)
+
+
 def get_auth_service(
-    repository: UserRepository = Depends(get_user_repository)
+    repository: UserRepository = Depends(get_user_repository),
+    sender: IEmailSender = Depends(get_email_sender),
+    template_engine: ITemplateEngine = Depends(get_template_engine)
 ) -> AuthService:
-    return AuthService(repository)
+    """AuthService ahora recibe sender para enviar el email de verificación al registrarse"""
+    return AuthService(repository, sender, template_engine)
+
+
+def get_user_service(
+    user_repository: UserRepository = Depends(get_user_repository),
+    email_repository: EmailRepository = Depends(get_email_repository),
+    sender: IEmailSender = Depends(get_email_sender),
+    template_engine: ITemplateEngine = Depends(get_template_engine)
+) -> UserService:
+    return UserService(user_repository, email_repository, sender, template_engine)
+
+
+# ════════════════════════════════════════════════
+# CONTROLLERS
+# ════════════════════════════════════════════════
+
+def get_email_controller(
+    email_service: EmailService = Depends(get_email_service)
+) -> EmailController:
+    return EmailController(email_service)
 
 
 def get_auth_controller(
     auth_service: AuthService = Depends(get_auth_service)
 ) -> AuthController:
     return AuthController(auth_service)
+
+
+def get_user_controller(
+    user_service: UserService = Depends(get_user_service)
+) -> UserController:
+    return UserController(user_service)

@@ -12,13 +12,11 @@ class UserStatus(str, Enum):
 
 
 class UserBase(BaseModel):
-    """Schema base para usuarios"""
     name: str = Field(..., min_length=1, max_length=255, description="Nombre del usuario")
     email: EmailStr = Field(..., description="Email del usuario")
 
 
 class UserCreate(UserBase):
-    """Schema para crear un usuario"""
     password: str = Field(..., min_length=8, description="Contraseña del usuario")
 
     @field_validator("password")
@@ -39,7 +37,6 @@ class UserCreate(UserBase):
 
 
 class UserUpdate(BaseModel):
-    """Schema para actualizar un usuario"""
     name: Optional[str] = Field(None, min_length=1, max_length=255)
     email: Optional[EmailStr] = None
     status: Optional[UserStatus] = None
@@ -47,10 +44,9 @@ class UserUpdate(BaseModel):
 
 
 class UserResponse(UserBase):
-    """Schema para respuesta de usuario"""
     id: int
     status: UserStatus
-    email_verify: bool
+    email_verify: Optional[bool] = None
     last_login: Optional[datetime] = None
     created_at: datetime
     updated_at: datetime
@@ -60,17 +56,15 @@ class UserResponse(UserBase):
 
 
 class UserList(BaseModel):
-    """Schema para listar usuarios"""
     users: list[UserResponse]
     total: int
     page: int
     page_size: int
 
 
-# ── Schemas de autenticación ──────────────────────────────
+# ── Auth schemas ──────────────────────────────────────────
 
 class LoginRequest(BaseModel):
-    """Schema para el login"""
     email: EmailStr = Field(..., description="Email del usuario")
     password: str = Field(..., min_length=1, description="Contraseña")
 
@@ -91,15 +85,13 @@ class LoginRequest(BaseModel):
 
 
 class TokenResponse(BaseModel):
-    """Schema de respuesta del token JWT"""
     access_token: str
     token_type: str = "bearer"
-    expires_in: int = 1800  # segundos
+    expires_in: int = 1800
     user: UserResponse
 
 
 class ChangePasswordRequest(BaseModel):
-    """Schema para cambiar contraseña"""
     current_password: str = Field(..., min_length=1)
     new_password: str = Field(..., min_length=8)
 
@@ -109,3 +101,28 @@ class ChangePasswordRequest(BaseModel):
         if len(value.encode("utf-8")) > 72:
             raise ValueError("La contraseña no puede exceder 72 bytes.")
         return value
+
+
+# ── Admin / User management schemas ──────────────────────
+
+class ChangeStatusRequest(BaseModel):
+    """Schema para cambiar el estado de un usuario (admin)"""
+    status: UserStatus = Field(..., description="Nuevo estado del usuario")
+
+    class Config:
+        json_schema_extra = {
+            "example": {"status": "blocked"}
+        }
+
+
+class SaveEmailKeyRequest(BaseModel):
+    """Schema para guardar la clave SMTP personal del usuario"""
+    email_key: str = Field(
+        ..., min_length=1,
+        description="Contraseña de aplicación SMTP del usuario"
+    )
+
+    class Config:
+        json_schema_extra = {
+            "example": {"email_key": "xxxx xxxx xxxx xxxx"}
+        }

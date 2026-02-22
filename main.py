@@ -23,7 +23,6 @@ app = FastAPI(
 async def startup_event():
     """Evento que se ejecuta al iniciar la aplicación"""
     init_db()
-    print("|-|-|-|-|-|-|-|-|-|-|-|-|-|-|-|-|-|-|")
     print("✅ Database initialized successfully")
 
 app_cors(app)
