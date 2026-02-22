@@ -10,7 +10,7 @@ app_config = {
     "CONTACT_NAME": "Administrador",
     "PORT": os.getenv("PORT") or 8000,
     "HOST": os.getenv("HOST") or "0.0.0.0",
-    "DOMAIN": os.getenv("DOMIAN") or "http://127.0.0.1:8000/"
+    "DOMAIN": os.getenv("DOMAIN") or "http://127.0.0.1:8000/"
 }
 
 database_config = {
