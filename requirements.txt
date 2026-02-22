@@ -12,7 +12,6 @@ greenlet==3.3.1
 h11==0.16.0
 idna==3.11
 Jinja2==3.1.4
-jwt==1.4.0
 MarkupSafe==3.0.3
 passlib==1.7.4
 psycopg2-binary==2.9.11
