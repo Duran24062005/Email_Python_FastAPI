@@ -9,7 +9,8 @@ app_config = {
     "DESCRIPTION": "API for sending emails using FastAPI and Python",
     "CONTACT_NAME": "Administrador",
     "PORT": os.getenv("PORT") or 8000,
-    "HOST": os.getenv("HOST") or "0.0.0.0"
+    "HOST": os.getenv("HOST") or "0.0.0.0",
+    "DOMAIN": os.getenv("DOMIAN") or "http://127.0.0.1:8000/"
 }
 
 database_config = {

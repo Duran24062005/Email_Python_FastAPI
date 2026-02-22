@@ -29,7 +29,7 @@ app_cors(app)
 
 app.mount("/public", StaticFiles(directory="static"), name="static")
 
-@app.get("/")
+@app.get("/publics")
 async def root():
     """
     Ruta raíz que sirve el archivo index.html

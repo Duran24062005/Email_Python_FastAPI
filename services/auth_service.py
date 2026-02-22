@@ -7,6 +7,7 @@ from core.exceptions import EmailAlreadyExists
 from models.user_models import UserStatus
 from interfaces.email_interfaces import IEmailSender, ITemplateEngine
 from typing import Optional
+from config.config import app_config
 
 
 class AuthService:
@@ -55,7 +56,7 @@ class AuthService:
             expires_delta=timedelta(hours=24)
         )
 
-        verify_url = f"https://tu-dominio.com/api/users/verify-email?token={verification_token}"
+        verify_url = f"{app_config["DOMAIN"]}api/users/verify-email?token={verification_token}"
 
         html_body = None
         if self.template_engine:
