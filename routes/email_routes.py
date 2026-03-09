@@ -1,7 +1,9 @@
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, Query, File, UploadFile, Form
 from controllers.emails_controller import EmailController
-from schemas.email_schema import EmailCreate, EmailResponse, EmailUpdate, EmailList
+from schemas.email_schema import EmailResponse, EmailUpdate, EmailList
 from dependencies import get_email_controller
+from typing import Optional
+import json
 
 email_router = APIRouter()
 
@@ -31,18 +33,38 @@ async def get_email(
 
 @email_router.post("/send", status_code=201, response_model=EmailResponse)
 async def send_email(
-    email: EmailCreate,
+    user_id: int = Form(...),
+    recipient: str = Form(...),
+    subject: str = Form(...),
+    body: Optional[str] = Form(None),
+    html_body: Optional[str] = Form(None),
+    template_name: Optional[str] = Form(None),
+    template_data: Optional[str] = Form(None), # Recibido como string JSON
+    pdf_attachment: Optional[UploadFile] = File(None),
     controller: EmailController = Depends(get_email_controller)
 ):
     """
-    Envía un nuevo email
+    Envía un nuevo email, con la opción de adjuntar un archivo PDF.
     
     Puedes enviar emails de 3 formas:
     1. Con texto plano: solo proporciona 'body'
     2. Con HTML directo: proporciona 'html_body'
-    3. Con plantilla: proporciona 'template_name' y 'template_data'
+    3. Con plantilla: proporciona 'template_name' y 'template_data' (como string JSON)
     """
-    return await controller.send_email(email)
+    
+    # Deserializar template_data si se proporcionó
+    template_data_dict = json.loads(template_data) if template_data else None
+
+    return await controller.send_email(
+        user_id=user_id,
+        recipient=recipient,
+        subject=subject,
+        body=body,
+        html_body=html_body,
+        template_name=template_name,
+        template_data=template_data_dict,
+        attachment=pdf_attachment
+    )
 
 
 @email_router.put("/update/{email_id}", status_code=200, response_model=EmailResponse)

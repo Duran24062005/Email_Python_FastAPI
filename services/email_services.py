@@ -1,4 +1,5 @@
 from typing import List, Optional
+from fastapi import UploadFile
 from schemas.email_schema import EmailCreate, EmailResponse, EmailUpdate, EmailList
 from interfaces.email_interfaces import IEmailRepository, IEmailSender, ITemplateEngine
 from models.email_model import EmailStatus, Email
@@ -21,12 +22,17 @@ class EmailService:
         self.sender = sender
         self.template_engine = template_engine
     
-    async def send_email(self, email_data: EmailCreate) -> EmailResponse:
+    async def send_email(
+        self,
+        email_data: EmailCreate,
+        attachment: Optional[UploadFile] = None
+    ) -> EmailResponse:
         """
         Envía un email y guarda el registro en la base de datos
         
         Args:
             email_data: Datos del email a enviar
+            attachment: Archivo adjunto (opcional)
             
         Returns:
             EmailResponse: Respuesta con el estado del email
@@ -46,16 +52,25 @@ class EmailService:
             )
         )
         
-        # 3. Intentar enviar el email
+        # 3. Leer adjunto si existe
+        attachment_content = None
+        attachment_filename = None
+        if attachment:
+            attachment_content = await attachment.read()
+            attachment_filename = attachment.filename
+        
+        # 4. Intentar enviar el email
         try:
             success = await self.sender.send(
                 recipient=email_data.recipient,
                 subject=email_data.subject,
                 body=body,
-                html_body=html_body
+                html_body=html_body,
+                attachment=attachment_content,
+                attachment_filename=attachment_filename
             )
             
-            # 4. Actualizar estado según resultado
+            # 5. Actualizar estado según resultado
             if success:
                 await self.repository.update_status(email_record.id, EmailStatus.SENT)
                 email_record.status = EmailStatus.SENT

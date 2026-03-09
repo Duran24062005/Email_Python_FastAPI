@@ -1,6 +1,7 @@
 import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
+from email.mime.application import MIMEApplication
 from typing import Optional
 from interfaces.email_interfaces import IEmailSender
 import os
@@ -12,7 +13,6 @@ load_dotenv()
 class SMTPEmailSender(IEmailSender):
     """
     Implementación de envío de emails usando SMTP
-    (Single Responsibility: solo se encarga de enviar emails)
     """
     
     def __init__(
@@ -36,39 +36,37 @@ class SMTPEmailSender(IEmailSender):
         recipient: str,
         subject: str,
         body: str,
-        html_body: Optional[str] = None
+        html_body: Optional[str] = None,
+        attachment: Optional[bytes] = None,
+        attachment_filename: Optional[str] = None
     ) -> bool:
         """
-        Envía un email usando SMTP
-        
-        Args:
-            recipient: Email del destinatario
-            subject: Asunto del email
-            body: Cuerpo en texto plano
-            html_body: Cuerpo en HTML (opcional)
-            
-        Returns:
-            bool: True si se envió correctamente, False si falló
+        Envía un email usando SMTP, con soporte para adjuntos.
         """
         try:
             # Crear mensaje
-            message = MIMEMultipart("alternative")
+            message = MIMEMultipart("mixed") if attachment else MIMEMultipart("alternative")
             message["From"] = self.smtp_user
             message["To"] = recipient
             message["Subject"] = subject
             
-            # Agregar cuerpo en texto plano
-            part_text = MIMEText(body, "plain", "utf-8")
-            message.attach(part_text)
-            
-            # Agregar cuerpo HTML si existe
+            # Contenido del cuerpo
+            body_part = MIMEMultipart("alternative")
+            body_part.attach(MIMEText(body, "plain", "utf-8"))
             if html_body:
-                part_html = MIMEText(html_body, "html", "utf-8")
-                message.attach(part_html)
+                body_part.attach(MIMEText(html_body, "html", "utf-8"))
+            
+            message.attach(body_part)
+            
+            # Adjuntar archivo si existe
+            if attachment and attachment_filename:
+                part_attachment = MIMEApplication(attachment, Name=attachment_filename)
+                part_attachment["Content-Disposition"] = f'attachment; filename="{attachment_filename}"'
+                message.attach(part_attachment)
+                print(f"📎 Adjuntando archivo: {attachment_filename}")
             
             # Conectar y enviar
             if self.use_ssl:
-                # Usar SSL en puerto 465
                 print(f"🔌 Conectando a {self.smtp_host}:{self.smtp_port} con SSL...")
                 server = smtplib.SMTP_SSL(self.smtp_host, self.smtp_port, timeout=30)
                 print("🔐 Autenticando...")
@@ -78,7 +76,6 @@ class SMTPEmailSender(IEmailSender):
                 server.quit()
                 print("✅ Conexión cerrada correctamente")
             else:
-                # Usar TLS en puerto 587
                 print(f"🔌 Conectando a {self.smtp_host}:{self.smtp_port} con TLS...")
                 server = smtplib.SMTP(self.smtp_host, self.smtp_port, timeout=30)
                 server.ehlo()
@@ -104,7 +101,6 @@ class SMTPEmailSender(IEmailSender):
 class MockEmailSender(IEmailSender):
     """
     Implementación mock para desarrollo/testing
-    (Liskov Substitution: puede reemplazar a SMTPEmailSender sin problemas)
     """
     
     async def send(
@@ -112,7 +108,9 @@ class MockEmailSender(IEmailSender):
         recipient: str,
         subject: str,
         body: str,
-        html_body: Optional[str] = None
+        html_body: Optional[str] = None,
+        attachment: Optional[bytes] = None,
+        attachment_filename: Optional[str] = None
     ) -> bool:
         """Simula el envío de un email (para desarrollo/testing)"""
         print("=" * 60)
@@ -122,5 +120,7 @@ class MockEmailSender(IEmailSender):
         print(f"Cuerpo: {body[:100]}...")
         if html_body:
             print(f"HTML: {html_body[:100]}...")
+        if attachment:
+            print(f"📎 Adjunto: {attachment_filename} ({len(attachment)} bytes)")
         print("=" * 60)
         return True

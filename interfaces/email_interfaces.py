@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import List, Optional
+from typing import List, Optional, bytes
 from models.email_model import Email
 from schemas.email_schema import EmailCreate, EmailUpdate
 
@@ -48,7 +48,15 @@ class IEmailSender(ABC):
     """
     
     @abstractmethod
-    async def send(self, recipient: str, subject: str, body: str, html_body: Optional[str] = None) -> bool:
+    async def send(
+        self,
+        recipient: str,
+        subject: str,
+        body: str,
+        html_body: Optional[str] = None,
+        attachment: Optional[bytes] = None,
+        attachment_filename: Optional[str] = None
+    ) -> bool:
         """
         Envía un email
         

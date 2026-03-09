@@ -1,5 +1,5 @@
-from typing import Optional
-from fastapi import HTTPException, status
+from typing import Optional, Dict, Any
+from fastapi import HTTPException, status, UploadFile
 from schemas.email_schema import EmailCreate, EmailResponse, EmailUpdate, EmailList
 from services.email_services import EmailService
 
@@ -13,21 +13,34 @@ class EmailController:
     def __init__(self, email_service: EmailService):
         self.email_service = email_service
     
-    async def send_email(self, email_data: EmailCreate) -> EmailResponse:
+    async def send_email(
+        self,
+        user_id: int,
+        recipient: str,
+        subject: str,
+        body: Optional[str],
+        html_body: Optional[str],
+        template_name: Optional[str],
+        template_data: Optional[Dict[str, Any]],
+        attachment: Optional[UploadFile]
+    ) -> EmailResponse:
         """
         Maneja la petición de envío de email
-        
-        Args:
-            email_data: Datos del email a enviar
-            
-        Returns:
-            EmailResponse: Respuesta con el estado del email
             
         Raises:
             HTTPException: Si hay un error al procesar la petición
         """
         try:
-            result = await self.email_service.send_email(email_data)
+            email_data = EmailCreate(
+                user_id=user_id,
+                recipient=recipient,
+                subject=subject,
+                body=body,
+                html_body=html_body,
+                template_name=template_name,
+                template_data=template_data
+            )
+            result = await self.email_service.send_email(email_data, attachment)
             
             # Si el email falló al enviar, retornar 500
             if result.status == "failed":
