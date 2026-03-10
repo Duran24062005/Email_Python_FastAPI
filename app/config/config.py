@@ -3,6 +3,14 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+
+def _parse_cors_origins() -> list[str]:
+    raw_origins = os.getenv(
+        "CORS_ORIGINS",
+        "http://localhost:3000,http://127.0.0.1:3000,https://swift-mailer.vercel.app",
+    )
+    return [origin.strip().rstrip("/") for origin in raw_origins.split(",") if origin.strip()]
+
 app_config = {
     "APP_NAME": "Email_Python_FastAPI",
     "VERSION": "1.0.0",
@@ -10,7 +18,8 @@ app_config = {
     "CONTACT_NAME": "Administrador",
     "PORT": os.getenv("PORT") or 8000,
     "HOST": os.getenv("HOST") or "0.0.0.0",
-    "DOMAIN": os.getenv("DOMAIN") or "http://127.0.0.1:8000/"
+    "DOMAIN": os.getenv("DOMAIN") or "http://127.0.0.1:8000/",
+    "CORS_ORIGINS": _parse_cors_origins(),
 }
 
 database_config = {
