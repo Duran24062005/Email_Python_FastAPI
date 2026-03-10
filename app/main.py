@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import FileResponse
+from fastapi.responses import RedirectResponse
 from pathlib import Path
 from app.config.config import app_config
 from app.middlewares.cors import app_cors
@@ -36,11 +36,9 @@ app.mount("/public", StaticFiles(directory=str(STATIC_DIR)), name="static")
 @app.get("/")
 async def root():
     """
-    Ruta raíz que sirve el archivo index.html
-    
-    Nota: No  es necesario para la documentación de la API
+    Ruta raíz que redirige a la landing estática.
     """
-    return FileResponse(STATIC_DIR / "index.html")
+    return RedirectResponse(url="/public/index.html", status_code=307)
 
 app.include_router(auth_router, prefix="/api/auth", tags=["Auth"])
 app.include_router(user_router, prefix="/api/users", tags=["Users"])
