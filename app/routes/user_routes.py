@@ -1,11 +1,11 @@
 from fastapi import APIRouter, Depends, Query
-from controllers.user_controller import UserController
-from schemas.user_schemas import UserResponse, UserUpdate, UserList, ChangeStatusRequest, SaveEmailKeyRequest
-from schemas.email_schema import EmailList, EmailResponse, SendWithTemplateRequest
-from middlewares.auth_middleware import get_current_active_user
-from middlewares.role_middleware import require_admin
-from models.user_models import User
-from dependencies import get_user_controller
+from app.controllers.user_controller import UserController
+from app.schemas.user_schemas import UserResponse, UserUpdate, UserList, ChangeStatusRequest, SaveEmailKeyRequest
+from app.schemas.email_schema import EmailList, EmailResponse, SendWithTemplateRequest
+from app.middlewares.auth_middleware import get_current_active_user
+from app.middlewares.role_middleware import require_admin
+from app.models.user_models import User
+from app.dependencies import get_user_controller
 
 user_router = APIRouter()
 

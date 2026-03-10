@@ -1,8 +1,8 @@
 from fastapi import HTTPException, status
-from schemas.user_schemas import UserCreate, LoginRequest, TokenResponse, UserResponse, ChangePasswordRequest
-from services.auth_service import AuthService
-from core.exceptions import EmailAlreadyExists, WeakPassword
-from models.user_models import User
+from app.schemas.user_schemas import UserCreate, LoginRequest, TokenResponse, UserResponse, ChangePasswordRequest
+from app.services.auth_service import AuthService
+from app.core.exceptions import EmailAlreadyExists, WeakPassword
+from app.models.user_models import User
 
 
 class AuthController:

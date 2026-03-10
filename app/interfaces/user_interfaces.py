@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import List, Optional
-from models.user_models import User
-from schemas.user_schemas import UserCreate, UserUpdate
+from app.models.user_models import User
+from app.schemas.user_schemas import UserCreate, UserUpdate
 
 class IUserRepository(ABC):
     """

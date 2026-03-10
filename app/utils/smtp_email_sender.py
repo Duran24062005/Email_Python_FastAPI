@@ -3,7 +3,7 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from email.mime.application import MIMEApplication
 from typing import Optional
-from interfaces.email_interfaces import IEmailSender
+from app.interfaces.email_interfaces import IEmailSender
 import os
 from dotenv import load_dotenv
 

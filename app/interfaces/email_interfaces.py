@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
-from typing import List, Optional, bytes
-from models.email_model import Email
-from schemas.email_schema import EmailCreate, EmailUpdate
+from typing import List, Optional
+from app.models.email_model import Email
+from app.schemas.email_schema import EmailCreate, EmailUpdate
 
 
 class IEmailRepository(ABC):

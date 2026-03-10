@@ -1,7 +1,7 @@
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, Session
 from sqlalchemy.pool import StaticPool
-from config.config import database_config
+from app.config.config import database_config
 from typing import Generator
 
 # Construir URL de conexión
@@ -35,8 +35,8 @@ def init_db():
     Inicializa la base de datos creando todas las tablas.
     Llamar esto al inicio de la aplicación.
     """
-    from models.user_models import Base
-    from models.email_model import Base
+    from app.models.user_models import Base
+    from app.models.email_model import Base
     from sqlalchemy import text
     
     try:

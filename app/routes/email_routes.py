@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, Query, File, UploadFile, Form
-from controllers.emails_controller import EmailController
-from schemas.email_schema import EmailResponse, EmailUpdate, EmailList
-from dependencies import get_email_controller
+from app.controllers.emails_controller import EmailController
+from app.schemas.email_schema import EmailResponse, EmailUpdate, EmailList
+from app.dependencies import get_email_controller
 from typing import Optional
 import json
 

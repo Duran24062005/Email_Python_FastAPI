@@ -1,9 +1,9 @@
 from fastapi import APIRouter, Depends
-from controllers.auth_controller import AuthController
-from schemas.user_schemas import UserCreate, LoginRequest, TokenResponse, UserResponse, ChangePasswordRequest
-from middlewares.auth_middleware import get_current_active_user
-from models.user_models import User
-from dependencies import get_auth_controller  # lo agregas en dependencies.py
+from app.controllers.auth_controller import AuthController
+from app.schemas.user_schemas import UserCreate, LoginRequest, TokenResponse, UserResponse, ChangePasswordRequest
+from app.middlewares.auth_middleware import get_current_active_user
+from app.models.user_models import User
+from app.dependencies import get_auth_controller  # lo agregas en dependencies.py
 
 auth_router = APIRouter()
 

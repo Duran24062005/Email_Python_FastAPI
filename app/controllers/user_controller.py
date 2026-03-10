@@ -1,9 +1,9 @@
 from fastapi import HTTPException, status
 from typing import Optional
-from schemas.user_schemas import UserResponse, UserUpdate, UserList, ChangeStatusRequest
-from schemas.email_schema import EmailList, EmailResponse, SendWithTemplateRequest
-from services.user_service import UserService
-from models.user_models import UserStatus, User
+from app.schemas.user_schemas import UserResponse, UserUpdate, UserList, ChangeStatusRequest
+from app.schemas.email_schema import EmailList, EmailResponse, SendWithTemplateRequest
+from app.services.user_service import UserService
+from app.models.user_models import UserStatus, User
 
 
 class UserController:

@@ -1,8 +1,8 @@
 from typing import List, Optional
 from sqlalchemy.orm import Session
-from models.email_model import Email, EmailStatus
-from schemas.email_schema import EmailCreate, EmailUpdate
-from interfaces.email_interfaces import IEmailRepository
+from app.models.email_model import Email, EmailStatus
+from app.schemas.email_schema import EmailCreate, EmailUpdate
+from app.interfaces.email_interfaces import IEmailRepository
 from datetime import datetime
 
 

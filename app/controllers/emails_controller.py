@@ -1,7 +1,7 @@
 from typing import Optional, Dict, Any
 from fastapi import HTTPException, status, UploadFile
-from schemas.email_schema import EmailCreate, EmailResponse, EmailUpdate, EmailList
-from services.email_services import EmailService
+from app.schemas.email_schema import EmailCreate, EmailResponse, EmailUpdate, EmailList
+from app.services.email_services import EmailService
 
 
 class EmailController:

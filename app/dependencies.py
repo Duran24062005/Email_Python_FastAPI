@@ -1,17 +1,17 @@
 from fastapi import Depends
 from sqlalchemy.orm import Session
-from config.database.connection import get_db
-from repositories.email_repository import EmailRepository
-from repositories.user_repository import UserRepository
-from services.email_services import EmailService
-from services.auth_service import AuthService
-from services.user_service import UserService
-from controllers.emails_controller import EmailController
-from controllers.auth_controller import AuthController
-from controllers.user_controller import UserController
-from utils.smtp_email_sender import SMTPEmailSender, MockEmailSender
-from utils.template_engine import Jinja2TemplateEngine
-from interfaces.email_interfaces import IEmailSender, ITemplateEngine
+from app.config.database.connection import get_db
+from app.repositories.email_repository import EmailRepository
+from app.repositories.user_repository import UserRepository
+from app.services.email_services import EmailService
+from app.services.auth_service import AuthService
+from app.services.user_service import UserService
+from app.controllers.emails_controller import EmailController
+from app.controllers.auth_controller import AuthController
+from app.controllers.user_controller import UserController
+from app.utils.smtp_email_sender import SMTPEmailSender, MockEmailSender
+from app.utils.template_engine import Jinja2TemplateEngine
+from app.interfaces.email_interfaces import IEmailSender, ITemplateEngine
 import os
 from pathlib import Path
 

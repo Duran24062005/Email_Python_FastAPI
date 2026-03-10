@@ -1,8 +1,8 @@
 from typing import List, Optional
 from fastapi import UploadFile
-from schemas.email_schema import EmailCreate, EmailResponse, EmailUpdate, EmailList
-from interfaces.email_interfaces import IEmailRepository, IEmailSender, ITemplateEngine
-from models.email_model import EmailStatus, Email
+from app.schemas.email_schema import EmailCreate, EmailResponse, EmailUpdate, EmailList
+from app.interfaces.email_interfaces import IEmailRepository, IEmailSender, ITemplateEngine
+from app.models.email_model import EmailStatus, Email
 
 
 class EmailService:

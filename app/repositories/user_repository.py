@@ -1,9 +1,9 @@
 from typing import List, Optional
 from datetime import datetime
 from sqlalchemy.orm import Session
-from interfaces.user_interfaces import IUserRepository
-from models.user_models import User, UserRole, UserStatus
-from schemas.user_schemas import UserCreate, UserUpdate
+from app.interfaces.user_interfaces import IUserRepository
+from app.models.user_models import User, UserRole, UserStatus
+from app.schemas.user_schemas import UserCreate, UserUpdate
 
 
 class UserRepository(IUserRepository):

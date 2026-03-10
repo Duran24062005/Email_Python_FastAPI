@@ -2,7 +2,7 @@ from sqlalchemy import Column, Integer, String, Text, DateTime, Enum, ForeignKey
 from sqlalchemy.orm import relationship
 from datetime import datetime
 import enum
-from config.database.base import Base  # ← Base compartida
+from app.config.database.base import Base  # ← Base compartida
 
 
 class EmailStatus(str, enum.Enum):

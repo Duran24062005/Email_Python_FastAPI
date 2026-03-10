@@ -2,7 +2,7 @@ from sqlalchemy import Column, Integer, String, DateTime, Enum, Boolean
 from sqlalchemy.orm import relationship
 from datetime import datetime
 import enum
-from config.database.base import Base  # ← Base compartida, sin import circular
+from app.config.database.base import Base  # ← Base compartida, sin import circular
 
 
 class UserStatus(str, enum.Enum):

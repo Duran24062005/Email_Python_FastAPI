@@ -4,8 +4,8 @@ Ejecutar desde la raiz del proyecto con: python app/init_database.py
 """
 
 from sqlalchemy import create_engine, text
-from config.config import database_config
-from models.email_model import Base, EmailStatus
+from app.config.config import database_config
+from app.models.email_model import Base, EmailStatus
 import sys
 
 def create_database():

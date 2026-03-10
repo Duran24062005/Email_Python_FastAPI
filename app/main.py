@@ -2,12 +2,12 @@ from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 from pathlib import Path
-from config.config import app_config
-from middlewares.cors import app_cors
-from config.database.connection import init_db
-from routes.email_routes import email_router
-from routes.auth_routes import auth_router
-from routes.user_routes import user_router
+from app.config.config import app_config
+from app.middlewares.cors import app_cors
+from app.config.database.connection import init_db
+from app.routes.email_routes import email_router
+from app.routes.auth_routes import auth_router
+from app.routes.user_routes import user_router
 
 BASE_DIR = Path(__file__).resolve().parent
 STATIC_DIR = BASE_DIR / "static"

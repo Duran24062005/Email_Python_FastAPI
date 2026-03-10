@@ -1,6 +1,6 @@
 from fastapi import Depends, HTTPException, status
-from middlewares.auth_middleware import get_current_active_user
-from models.user_models import User, UserRole
+from app.middlewares.auth_middleware import get_current_active_user
+from app.models.user_models import User, UserRole
 
 
 async def require_admin(

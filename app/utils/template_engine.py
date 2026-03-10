@@ -1,5 +1,5 @@
 from jinja2 import Environment, FileSystemLoader, TemplateNotFound
-from interfaces.email_interfaces import ITemplateEngine
+from app.interfaces.email_interfaces import ITemplateEngine
 from pathlib import Path
 
 

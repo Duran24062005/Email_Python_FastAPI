@@ -3,10 +3,10 @@ from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.orm import Session
 import jwt
 
-from config.database.connection import get_db
-from core.security import decode_access_token
-from repositories.user_repository import UserRepository
-from models.user_models import User
+from app.config.database.connection import get_db
+from app.core.security import decode_access_token
+from app.repositories.user_repository import UserRepository
+from app.models.user_models import User
 
 bearer_scheme = HTTPBearer()
 
@@ -52,7 +52,7 @@ async def get_current_active_user(
     current_user: User = Depends(get_current_user)
 ) -> User:
     """Solo permite usuarios con status ACTIVE"""
-    from models.user_models import UserStatus
+    from app.models.user_models import UserStatus
     if current_user.status != UserStatus.ACTIVE:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,

@@ -1,11 +1,11 @@
 from fastapi import HTTPException, status
 from typing import List, Optional
-from repositories.user_repository import UserRepository
-from schemas.user_schemas import UserResponse, UserUpdate, UserList
-from schemas.email_schema import EmailCreate, EmailResponse, EmailList
-from models.user_models import UserStatus
-from interfaces.email_interfaces import IEmailSender, ITemplateEngine
-from repositories.email_repository import EmailRepository
+from app.repositories.user_repository import UserRepository
+from app.schemas.user_schemas import UserResponse, UserUpdate, UserList
+from app.schemas.email_schema import EmailCreate, EmailResponse, EmailList
+from app.models.user_models import UserStatus
+from app.interfaces.email_interfaces import IEmailSender, ITemplateEngine
+from app.repositories.email_repository import EmailRepository
 
 
 class UserService:

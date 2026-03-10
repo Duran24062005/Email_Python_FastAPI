@@ -1,13 +1,13 @@
 from datetime import timedelta
 from fastapi import HTTPException, status
-from repositories.user_repository import UserRepository
-from schemas.user_schemas import UserCreate, UserResponse, LoginRequest, TokenResponse, ChangePasswordRequest
-from core.security import hash_password, verify_password, create_access_token
-from core.exceptions import EmailAlreadyExists
-from models.user_models import UserStatus
-from interfaces.email_interfaces import IEmailSender, ITemplateEngine
+from app.repositories.user_repository import UserRepository
+from app.schemas.user_schemas import UserCreate, UserResponse, LoginRequest, TokenResponse, ChangePasswordRequest
+from app.core.security import hash_password, verify_password, create_access_token
+from app.core.exceptions import EmailAlreadyExists
+from app.models.user_models import UserStatus
+from app.interfaces.email_interfaces import IEmailSender, ITemplateEngine
 from typing import Optional
-from config.config import app_config
+from app.config.config import app_config
 
 
 class AuthService:
