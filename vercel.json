@@ -3,11 +3,11 @@
     "builds": 
     [
         {
-            "src": "main.py",
+            "src": "app/main.py",
             "use": "@vercel/python"
         },
         {
-            "src": "static/**",
+            "src": "app/static/**",
             "use": "@vercel/static"
         }
     ],
@@ -15,11 +15,11 @@
     [
         {
             "src": "/public/(.*)",
-            "dest": "/static/$1"
+            "dest": "/app/static/$1"
         },
         {
             "src": "/(.*)",
-            "dest": "main.py"
+            "dest": "app/main.py"
         }
     ],
     "env": 

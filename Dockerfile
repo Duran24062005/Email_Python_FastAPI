@@ -21,7 +21,9 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY . .
 
 # Crear directorio de uploads si se necesita
-RUN mkdir -p uploads templates static
+RUN mkdir -p /app/app/uploads /app/app/templates /app/app/static
+
+WORKDIR /app/app
 
 # Exponer el puerto
 EXPOSE 8001

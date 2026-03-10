@@ -27,9 +27,9 @@ services:
       postgres:
         condition: service_healthy
     volumes:
-      - ./templates:/app/templates   # Hot-reload de plantillas sin rebuild
-      - ./static:/app/static
-      - ./uploads:/app/uploads
+      - ./app/templates:/app/app/templates   # Hot-reload de plantillas sin rebuild
+      - ./app/static:/app/app/static
+      - ./app/uploads:/app/app/uploads
     networks:
       - email-network
     restart: unless-stopped

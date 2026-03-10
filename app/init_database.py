@@ -1,6 +1,6 @@
 """
-Script para inicializar la base de datos
-Ejecutar: python init_database.py
+Script para inicializar la base de datos.
+Ejecutar desde la raiz del proyecto con: python app/init_database.py
 """
 
 from sqlalchemy import create_engine, text
@@ -101,7 +101,7 @@ def main():
     print("\n" + "=" * 60)
     print("✅ Base de datos inicializada correctamente")
     print("=" * 60)
-    print("\n🚀 Ahora puedes ejecutar: uvicorn main:app --reload")
+    print("\n🚀 Ahora puedes ejecutar: cd app && uvicorn main:app --reload")
 
 
 if __name__ == "__main__":

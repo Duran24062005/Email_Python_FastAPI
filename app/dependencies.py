@@ -13,6 +13,9 @@ from utils.smtp_email_sender import SMTPEmailSender, MockEmailSender
 from utils.template_engine import Jinja2TemplateEngine
 from interfaces.email_interfaces import IEmailSender, ITemplateEngine
 import os
+from pathlib import Path
+
+BASE_DIR = Path(__file__).resolve().parent
 
 
 # ════════════════════════════════════════════════
@@ -36,7 +39,7 @@ def get_email_sender() -> IEmailSender:
 
 
 def get_template_engine() -> ITemplateEngine:
-    return Jinja2TemplateEngine(templates_dir="templates")
+    return Jinja2TemplateEngine(templates_dir=BASE_DIR / "templates")
 
 
 # ════════════════════════════════════════════════

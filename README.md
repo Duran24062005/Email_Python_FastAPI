@@ -34,22 +34,26 @@ Todo el wiring de dependencias ocurre en `dependencies.py`. Los servicios depend
 ### Estructura del Proyecto
 
 ```
-├── config/                      # Configuración y conexión a BD
-├── core/                        # Seguridad (JWT, bcrypt) y excepciones de dominio
-├── interfaces/                  # Contratos ABC (IEmailSender, ITemplateEngine, IEmailRepository...)
-├── models/                      # Modelos SQLAlchemy (User, Email)
-├── schemas/                     # DTOs Pydantic (request/response)
-├── repositories/                # Acceso a datos (UserRepository, EmailRepository)
-├── services/                    # Lógica de negocio (AuthService, UserService, EmailService)
-├── controllers/                 # Capa HTTP (mapeo de excepciones de dominio → HTTP)
-├── middlewares/                  # JWT auth, control de roles, CORS
-├── routes/                      # Definición de endpoints (auth, users, emails)
-├── utils/                       # SMTPEmailSender, MockEmailSender, Jinja2TemplateEngine
-├── templates/                   # Plantillas HTML (welcome, account_approved...)
-├── static/                      # Landing page con documentación visual
+├── app/
+│   ├── config/                  # Configuración y conexión a BD
+│   ├── core/                    # Seguridad (JWT, bcrypt) y excepciones de dominio
+│   ├── interfaces/              # Contratos ABC
+│   ├── models/                  # Modelos SQLAlchemy
+│   ├── schemas/                 # DTOs Pydantic
+│   ├── repositories/            # Acceso a datos
+│   ├── services/                # Lógica de negocio
+│   ├── controllers/             # Capa HTTP
+│   ├── middlewares/             # JWT auth, roles, CORS
+│   ├── routes/                  # Endpoints
+│   ├── utils/                   # SMTPEmailSender, MockEmailSender, Jinja2TemplateEngine
+│   ├── templates/               # Plantillas HTML
+│   ├── static/                  # Landing page estática
+│   ├── dependencies.py          # Inyección de dependencias
+│   ├── init_database.py         # Script opcional de inicialización
+│   └── main.py                  # Punto de entrada FastAPI
 ├── docs/                        # Documentación del proyecto
-├── dependencies.py              # Inyección de dependencias
-└── main.py                      # Punto de entrada FastAPI
+├── prds/                        # PRDs funcionales
+└── Dockerfile
 ```
 
 ## 🚀 Instalación
@@ -85,9 +89,10 @@ cp .env.example .env
 
 # 4. Crear base de datos PostgreSQL
 createdb email_db
-# O ejecutar: python init_database.py
+# O ejecutar: python app/init_database.py
 
 # 5. Ejecutar
+cd app
 uvicorn main:app --reload --port 8001
 ```
 
@@ -165,7 +170,7 @@ curl http://localhost:8001/api/users/me/inbox?page=1&page_size=10 \
 
 ## 🎨 Plantillas HTML
 
-Las plantillas están en `templates/` y usan Jinja2. Las disponibles son:
+Las plantillas están en `app/templates/` y usan Jinja2. Las disponibles son:
 
 | Plantilla | Variables requeridas |
 |---|---|
@@ -174,13 +179,13 @@ Las plantillas están en `templates/` y usan Jinja2. Las disponibles son:
 | `account_approved.html` | `nombre`, `empresa`, `role`, `login_link` |
 | `my_website.html` | `nombre` |
 
-Para agregar una plantilla nueva, simplemente crea el archivo `.html` en `templates/` y úsalo por nombre en el endpoint de envío.
+Para agregar una plantilla nueva, crea el archivo `.html` en `app/templates/` y úsalo por nombre en el endpoint de envío.
 
 ## 🔧 Extender la Funcionalidad
 
 ### Agregar un proveedor de email (ej: SendGrid)
 
-1. Crea `utils/sendgrid_sender.py` implementando `IEmailSender`:
+1. Crea `app/utils/sendgrid_sender.py` implementando `IEmailSender`:
 
 ```python
 from interfaces.email_interfaces import IEmailSender
@@ -194,7 +199,7 @@ class SendGridEmailSender(IEmailSender):
         return True
 ```
 
-2. Actualiza `dependencies.py`:
+2. Actualiza `app/dependencies.py`:
 
 ```python
 def get_email_sender() -> IEmailSender:

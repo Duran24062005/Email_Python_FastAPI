@@ -9,7 +9,7 @@ class Jinja2TemplateEngine(ITemplateEngine):
     (Single Responsibility: solo renderiza plantillas)
     """
     
-    def __init__(self, templates_dir: str = "templates"):
+    def __init__(self, templates_dir: str | Path = "templates"):
         """
         Inicializa el motor de plantillas
         
@@ -44,8 +44,6 @@ class Jinja2TemplateEngine(ITemplateEngine):
         """
         try:
             template = self.env.get_template(template_name)
-            print(template_name)
-            print(self.templates_dir)
             return template.render(**context)
         except TemplateNotFound:
             raise FileNotFoundError(f"Template '{template_name}' not found in {self.templates_dir}")
@@ -62,7 +60,7 @@ class SimpleTemplateEngine(ITemplateEngine):
     Útil para plantillas muy básicas sin lógica compleja
     """
     
-    def __init__(self, templates_dir: str = "templates"):
+    def __init__(self, templates_dir: str | Path = "templates"):
         self.templates_dir = Path(templates_dir)
         self.templates_dir.mkdir(exist_ok=True)
     

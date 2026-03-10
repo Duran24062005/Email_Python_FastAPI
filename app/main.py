@@ -1,12 +1,16 @@
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
+from pathlib import Path
 from config.config import app_config
 from middlewares.cors import app_cors
 from config.database.connection import init_db
 from routes.email_routes import email_router
 from routes.auth_routes import auth_router
 from routes.user_routes import user_router
+
+BASE_DIR = Path(__file__).resolve().parent
+STATIC_DIR = BASE_DIR / "static"
 
 app = FastAPI(
     title=app_config["APP_NAME"],
@@ -27,7 +31,7 @@ async def startup_event():
 
 app_cors(app)
 
-app.mount("/public", StaticFiles(directory="static"), name="static")
+app.mount("/public", StaticFiles(directory=str(STATIC_DIR)), name="static")
 
 @app.get("/")
 async def root():
@@ -36,7 +40,7 @@ async def root():
     
     Nota: No  es necesario para la documentación de la API
     """
-    return FileResponse("static/index.html")
+    return FileResponse(STATIC_DIR / "index.html")
 
 app.include_router(auth_router, prefix="/api/auth", tags=["Auth"])
 app.include_router(user_router, prefix="/api/users", tags=["Users"])
