@@ -38,7 +38,7 @@ async def root():
     """
     Ruta raíz que redirige a la landing estática.
     """
-    return RedirectResponse(url="/public/index.html", status_code=307)
+    return RedirectResponse(url="/docs")
 
 app.include_router(auth_router, prefix="/api/auth", tags=["Auth"])
 app.include_router(user_router, prefix="/api/users", tags=["Users"])
