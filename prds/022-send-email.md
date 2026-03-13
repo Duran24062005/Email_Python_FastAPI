@@ -11,11 +11,11 @@ Esta funcionalidad permite enviar un email y registrar el resultado del envio en
 ### Endpoint
 
 - **Endpoint:** `POST /emails/send`
-- **Tipo de Contenido:** `multipart/form-data`
+- **Tipo de Contenido:** `application/json`
 
 ### Parametros
 
-El endpoint acepta los siguientes campos:
+El endpoint acepta los siguientes campos en el body JSON:
 
 - `user_id` (int, requerido): ID del usuario remitente.
 - `recipient` (str, requerido): Email del destinatario.
@@ -30,11 +30,10 @@ El endpoint acepta los siguientes campos:
 
 1.  **Ruta (`routes/email_routes.py`):**
     - Expone `POST /emails/send`.
-    - Recibe datos como `Form` y `File`.
-    - Convierte `template_data` desde string JSON a diccionario.
+    - Recibe un body JSON validado con `EmailCreate`.
 
 2.  **Controlador (`controllers/emails_controller.py`):**
-    - Construye un `EmailCreate`.
+    - Recibe un `EmailCreate`.
     - Llama al `EmailService`.
     - Si el resultado queda en estado `failed`, responde `500`.
 
@@ -53,7 +52,7 @@ El endpoint acepta los siguientes campos:
 
 ## 3. Como Usar
 
-Para enviar un email, se debe realizar una peticion `POST` al endpoint `/emails/send` usando `multipart/form-data`.
+Para enviar un email, se debe realizar una peticion `POST` al endpoint `/emails/send` usando `application/json`.
 
 ### Ejemplo con `curl`:
 
@@ -61,16 +60,22 @@ Para enviar un email, se debe realizar una peticion `POST` al endpoint `/emails/
 curl -X 'POST' \
   'http://127.0.0.1:8000/emails/send' \
   -H 'accept: application/json' \
-  -H 'Content-Type: multipart/form-data' \
-  -F 'user_id=1' \
-  -F 'recipient=destinatario@example.com' \
-  -F 'subject=Asunto del correo' \
-  -F 'body=Texto del mensaje'
+  -H 'Content-Type: application/json' \
+  -d '{
+    "user_id": 3,
+    "recipient": "alexisdurangomez588@gmail.com",
+    "subject": "Bienvenido",
+    "template_name": "welcome.html",
+    "template_data": {
+      "nombre": "Juan",
+      "empresa": "Mi Empresa"
+    }
+  }'
 ```
 
 ### Uso desde la Documentacion Interactiva de FastAPI
 
-La documentacion en `/docs` muestra este endpoint como formulario multiparte, permitiendo cargar datos de texto y archivos.
+La documentacion en `/docs` muestra este endpoint como body JSON.
 
 ## 4. Impacto
 

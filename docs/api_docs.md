@@ -84,7 +84,28 @@ La mayoría de los endpoints requieren autenticación mediante un **Bearer Token
 ### 1. Enviar un Email
 
 - **Endpoint:** `POST /emails/send`
-- **Descripción:** Envía un correo electrónico. Puede ser texto plano, HTML, basado en plantilla y/o con un archivo PDF adjunto.
+- **Descripción:** Envía un correo electrónico usando `application/json`. Puede ser texto plano, HTML o basado en plantilla.
+- **Tipo de Contenido:** `application/json`
+- **Request Body:**
+  ```json
+  {
+    "user_id": 3,
+    "recipient": "alexisdurangomez588@gmail.com",
+    "subject": "Bienvenido",
+    "template_name": "welcome.html",
+    "template_data": {
+      "nombre": "Juan",
+      "empresa": "Mi Empresa"
+    }
+  }
+  ```
+- **Respuesta Exitosa (201):**
+  - Devuelve el registro del email creado, con su estado (`sent`, `failed`).
+
+### 2. Enviar un Email con Formulario
+
+- **Endpoint:** `POST /emails/send/form`
+- **Descripción:** Envía un correo electrónico usando `multipart/form-data`. Este endpoint debe usarse cuando se necesita adjuntar un PDF.
 - **Tipo de Contenido:** `multipart/form-data`
 - **Parámetros (Form-Data):**
   - `user_id` (int, requerido): ID del usuario que envía.
@@ -100,7 +121,7 @@ La mayoría de los endpoints requieren autenticación mediante un **Bearer Token
 
 ---
 
-### 2. Obtener Lista de Emails
+### 3. Obtener Lista de Emails
 
 - **Endpoint:** `GET /emails/`
 - **Descripción:** Devuelve una lista paginada de todos los emails enviados en el sistema.
@@ -112,7 +133,7 @@ La mayoría de los endpoints requieren autenticación mediante un **Bearer Token
 
 ---
 
-### 3. Obtener un Email Específico
+### 4. Obtener un Email Específico
 
 - **Endpoint:** `GET /emails/{email_id}`
 - **Descripción:** Devuelve los detalles de un email por su ID.
@@ -121,7 +142,7 @@ La mayoría de los endpoints requieren autenticación mediante un **Bearer Token
 
 ---
 
-### 4. Eliminar un Email
+### 5. Eliminar un Email
 
 - **Endpoint:** `DELETE /emails/{email_id}`
 - **Descripción:** Elimina el registro de un email de la base de datos.

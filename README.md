@@ -146,6 +146,35 @@ curl -X POST http://localhost:8001/api/auth/login \
 ### Enviar email con plantilla
 
 ```bash
+curl -X POST http://localhost:8001/emails/send \
+  -H "Content-Type: application/json" \
+  -d '{
+    "user_id": 3,
+    "recipient": "alexisdurangomez588@gmail.com",
+    "subject": "Bienvenido",
+    "template_name": "welcome.html",
+    "template_data": {
+      "nombre": "Juan",
+      "empresa": "Mi Empresa"
+    }
+  }'
+```
+
+### Enviar email con formulario y adjunto
+
+```bash
+curl -X POST http://localhost:8001/emails/send/form \
+  -F "user_id=3" \
+  -F "recipient=alexisdurangomez588@gmail.com" \
+  -F "subject=Bienvenido" \
+  -F "template_name=welcome.html" \
+  -F 'template_data={"nombre":"Juan","empresa":"Mi Empresa"}' \
+  -F "pdf_attachment=@./archivo.pdf"
+```
+
+### Enviar email autenticado con plantilla
+
+```bash
 curl -X POST http://localhost:8001/api/users/me/send-template \
   -H "Authorization: Bearer <token>" \
   -H "Content-Type: application/json" \

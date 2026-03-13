@@ -4,18 +4,18 @@
 
 ## 1. Resumen
 
-Esta funcionalidad permite a los usuarios adjuntar archivos PDF a los correos electrónicos enviados a través de la API. El endpoint de envío de correos ha sido modificado para aceptar `multipart/form-data`, permitiendo la inclusión de un archivo junto con los datos del correo.
+Esta funcionalidad permite a los usuarios adjuntar archivos PDF a los correos electrónicos enviados a través de la API. El soporte de adjuntos se expone mediante un endpoint dedicado `multipart/form-data`, evitando afectar el endpoint JSON principal.
 
 ## 2. Descripción de la Funcionalidad
 
 ### Endpoint Modificado
 
-- **Endpoint:** `POST /emails/send`
+- **Endpoint:** `POST /emails/send/form`
 - **Tipo de Contenido:** `multipart/form-data`
 
 ### Parámetros
 
-El endpoint ahora acepta los siguientes campos como parte de un formulario `multipart/form-data`:
+El endpoint acepta los siguientes campos como parte de un formulario `multipart/form-data`:
 
 - `user_id` (int, requerido): ID del usuario que envía el correo.
 - `recipient` (str, requerido): Email del destinatario.
@@ -46,13 +46,13 @@ El endpoint ahora acepta los siguientes campos como parte de un formulario `mult
 
 ## 3. Cómo Usar
 
-Para enviar un correo con un archivo PDF adjunto, se debe realizar una petición `POST` al endpoint `/emails/send` utilizando `multipart/form-data`.
+Para enviar un correo con un archivo PDF adjunto, se debe realizar una petición `POST` al endpoint `/emails/send/form` utilizando `multipart/form-data`.
 
 ### Ejemplo con `curl`:
 
 ```bash
 curl -X 'POST' 
-  'http://127.0.0.1:8000/emails/send' 
+  'http://127.0.0.1:8000/emails/send/form' 
   -H 'accept: application/json' 
   -H 'Content-Type: multipart/form-data' 
   -F 'user_id=1' 
@@ -69,4 +69,4 @@ La documentación en `/docs` ahora muestra una interfaz para cargar el archivo d
 ## 4. Impacto
 
 - **Flexibilidad:** Los usuarios ahora pueden enviar documentos importantes como facturas, reportes o cualquier otro material en formato PDF.
-- **Cambio en la Interfaz del Endpoint:** El cambio de `application/json` a `multipart/form-data` es un cambio disruptivo para los clientes existentes del endpoint `/emails/send`. Se debe comunicar esta actualización a los desarrolladores que consumen la API.
+- **Separacion de Contratos:** El soporte PDF vive en `/emails/send/form`, mientras que `/emails/send` mantiene `application/json` para integraciones simples.

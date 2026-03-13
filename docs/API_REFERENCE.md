@@ -403,18 +403,19 @@ Obtiene un email por ID.
 
 ### `POST /emails/send` · 201
 
-Envía un email. Soporta texto plano, HTML directo o plantilla Jinja2.
+Envía un email con `application/json`. Soporta texto plano, HTML directo o plantilla Jinja2.
 
 **Body (`EmailCreate`):**
 ```json
 {
-  "user_id": 1,
-  "recipient": "usuario@example.com",
-  "subject": "Asunto",
-  "body": "Texto plano",
-  "html_body": "<h1>HTML opcional</h1>",
+  "user_id": 3,
+  "recipient": "alexisdurangomez588@gmail.com",
+  "subject": "Bienvenido",
   "template_name": "welcome.html",
-  "template_data": { "nombre": "Juan", "empresa": "Corp" }
+  "template_data": {
+    "nombre": "Juan",
+    "empresa": "Mi Empresa"
+  }
 }
 ```
 
@@ -424,6 +425,39 @@ Prioridad de contenido: `html_body` directo → plantilla → `body` como HTML b
 
 | Código | Motivo |
 |---|---|
+| `500` | Email enviado pero con `status: failed` |
+
+---
+
+### `POST /emails/send/form` · 201
+
+Envía un email con `multipart/form-data`. Usa esta variante cuando necesites adjuntar un PDF o enviar campos tipo formulario.
+
+**Form fields:**
+- `user_id` (int, requerido)
+- `recipient` (string, requerido)
+- `subject` (string, requerido)
+- `body` (string, opcional)
+- `html_body` (string, opcional)
+- `template_name` (string, opcional)
+- `template_data` (string JSON, opcional)
+- `pdf_attachment` (file PDF, opcional)
+
+**Ejemplo `curl`:**
+```bash
+curl -X POST http://localhost:8001/emails/send/form \
+  -F "user_id=3" \
+  -F "recipient=alexisdurangomez588@gmail.com" \
+  -F "subject=Bienvenido" \
+  -F "template_name=welcome.html" \
+  -F 'template_data={"nombre":"Juan","empresa":"Mi Empresa"}'
+```
+
+**Respuesta 201:** `EmailResponse`
+
+| Código | Motivo |
+|---|---|
+| `422` | `template_data` no es JSON válido o faltan campos requeridos |
 | `500` | Email enviado pero con `status: failed` |
 
 ---
@@ -565,6 +599,7 @@ Elimina un email del registro.
 | DELETE | `/api/users/admin/{id}` | Admin | Eliminar usuario |
 | GET | `/emails/` | — | Listar emails |
 | GET | `/emails/{id}` | — | Email por ID |
-| POST | `/emails/send` | — | Enviar email |
+| POST | `/emails/send` | — | Enviar email por JSON |
+| POST | `/emails/send/form` | — | Enviar email por formulario |
 | PUT | `/emails/update/{id}` | — | Actualizar email |
 | DELETE | `/emails/{id}` | — | Eliminar email |
