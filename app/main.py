@@ -19,7 +19,7 @@ app = FastAPI(
     contact={
         "name": app_config["CONTACT_NAME"]
     },
-    docs_url="/",
+    docs_url="/docs",
 )
 
 # Inicializar base de datos al arrancar
@@ -36,7 +36,7 @@ app.mount("/public", StaticFiles(directory=str(STATIC_DIR)), name="static")
 @app.get("/")
 async def root():
     """
-    Ruta raíz que redirige a la landing estática.
+    Ruta raíz que redirige a la documentación interactiva.
     """
     return RedirectResponse(url="/docs")
 
