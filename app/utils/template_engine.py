@@ -1,6 +1,7 @@
+from datetime import datetime
 from jinja2 import Environment, FileSystemLoader, TemplateNotFound
-from app.interfaces.email_interfaces import ITemplateEngine
 from pathlib import Path
+from app.interfaces.email_interfaces import ITemplateEngine
 
 
 class Jinja2TemplateEngine(ITemplateEngine):
@@ -27,6 +28,7 @@ class Jinja2TemplateEngine(ITemplateEngine):
             trim_blocks=True,
             lstrip_blocks=True
         )
+        self.env.globals["now"] = lambda: datetime.now().astimezone()
     
     def render(self, template_name: str, context: dict) -> str:
         """
