@@ -16,9 +16,9 @@ app_config = {
     "VERSION": "1.0.0",
     "DESCRIPTION": "API for sending emails using FastAPI and Python",
     "CONTACT_NAME": "Administrador",
-    "PORT": os.getenv("PORT") or 8000,
+    "PORT": os.getenv("PORT") or 8001,
     "HOST": os.getenv("HOST") or "0.0.0.0",
-    "DOMAIN": os.getenv("DOMAIN") or "http://127.0.0.1:8000/",
+    "DOMAIN": os.getenv("DOMAIN") or "http://127.0.0.1:8001/",
     "CORS_ORIGINS": _parse_cors_origins(),
 }
 

@@ -48,21 +48,17 @@ Thumbs.db
 .gitignore
 
 # Docker
-Dockerfile
-docker-compose*.yml
 .dockerignore
 
-# Docs y scripts de desarrollo
-TROUBLESHOOTING.md
-ARQUITECTURA.md
-architecture.md
-README.md
-*.md
+# Docs y artefactos no necesarios para la imagen
+docs/
+prds/
 
 # Scripts de inicialización (ya los maneja docker-entrypoint)
-init_database.py
-database_reset.sql
 test_smtp.py
 
 # Uploads generados en runtime
-uploads/
+app/uploads/
+
+# Herramientas locales
+.codex/

@@ -33,6 +33,18 @@ async def root():
     """
     return RedirectResponse(url="/docs")
 
+
+@app.get("/health")
+async def healthcheck():
+    """
+    Endpoint simple para healthchecks de Docker/orquestadores.
+    """
+    return {
+        "status": "ok",
+        "app": app_config["APP_NAME"],
+        "version": app_config["VERSION"],
+    }
+
 app.include_router(auth_router, prefix="/api/auth", tags=["Auth"])
 app.include_router(user_router, prefix="/api/users", tags=["Users"])
 app.include_router(email_router, prefix="/emails", tags=["Emails"])
