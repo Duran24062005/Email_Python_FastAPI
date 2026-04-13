@@ -23,7 +23,7 @@ Servicios disponibles:
 - API: `http://localhost:8001`
 - Swagger: `http://localhost:8001/docs`
 - Healthcheck: `http://localhost:8001/health`
-- PostgreSQL: `localhost:5432`
+- PostgreSQL: `localhost:${POSTGRES_HOST_PORT:-5432}`
 
 ## Qué hace la configuración actual
 
@@ -42,6 +42,7 @@ Usa `.env` para personalizar:
 ```env
 ENVIRONMENT=development
 SECRET_KEY=change-this-secret-key-in-production
+POSTGRES_HOST_PORT=5432
 PGUSER=admin
 PGPASSWORD=admin123
 PGDATABASE=email_db
@@ -54,6 +55,8 @@ Notas:
 - En `development` la app usa `MockEmailSender`
 - Para envío real, cambia a `ENVIRONMENT=production` y completa SMTP
 - Dentro de Docker Compose, `PGHOST` se fuerza a `postgres`
+- `POSTGRES_HOST_PORT` controla solo el puerto publicado en tu máquina host
+- Si `5432` ya está ocupado, usa otro puerto como `5433` sin tocar `PGPORT`
 
 ## Comandos útiles
 
@@ -83,6 +86,7 @@ En ese caso recuerda apuntar `PGHOST` a una base PostgreSQL accesible desde el c
 - Si la API no levanta, revisa `docker compose logs -f email-api`
 - Si faltan tablas o columnas, ejecuta `docker compose run --rm email-api alembic upgrade head`
 - Si PostgreSQL falla, elimina volúmenes con `docker compose down -v` y vuelve a crear
+- Si ves `bind: address already in use` en `5432`, cambia `POSTGRES_HOST_PORT` en `.env` o libera el puerto ocupado en tu host
 - Si no salen correos reales, confirma `ENVIRONMENT=production` y credenciales SMTP
 
 ## Flujo recomendado con migraciones

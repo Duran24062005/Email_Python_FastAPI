@@ -457,7 +457,7 @@ docker compose up --build
 | Servicio | Imagen | Puerto | Nota |
 |---|---|---|---|
 | `email-api` | Dockerfile (python:3.12-slim) | `8001:8001` | Depende de `postgres` (healthcheck) |
-| `postgres` | `postgres:16-alpine` | `5432:5432` | Inicializa con `database.sql` y luego puede alinearse con Alembic |
+| `postgres` | `postgres:16-alpine` | `${POSTGRES_HOST_PORT:-5432}:5432` | Inicializa con `database.sql` y luego puede alinearse con Alembic |
 
 Los volúmenes `./templates`, `./static` y `./uploads` se montan para hot-reload sin rebuild del contenedor.
 

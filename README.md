@@ -37,6 +37,7 @@ Queda disponible en:
 - API: `http://localhost:8001`
 - Swagger: `http://localhost:8001/docs`
 - Healthcheck: `http://localhost:8001/health`
+- PostgreSQL: `localhost:${POSTGRES_HOST_PORT:-5432}`
 
 La guía Docker detallada está en [docs/docker.md](docs/docker.md).
 
@@ -52,6 +53,7 @@ uvicorn app.main:app --reload --port 8001
 ```
 
 Si ejecutas la base de datos fuera de Docker, ajusta `PGHOST`, `PGPORT`, `PGUSER`, `PGPASSWORD` y `PGDATABASE` en tu `.env`.
+Si el puerto `5432` ya está ocupado en tu máquina, cambia `POSTGRES_HOST_PORT` en `.env` por otro valor, por ejemplo `5433`.
 
 ## Migraciones con Alembic
 
@@ -87,6 +89,7 @@ ACCESS_TOKEN_EXPIRE_MINUTES=30
 
 PGHOST=localhost
 PGPORT=5432
+POSTGRES_HOST_PORT=5432
 PGUSER=admin
 PGPASSWORD=admin123
 PGDATABASE=email_db
@@ -102,6 +105,7 @@ Notas:
 - `ENVIRONMENT=development` usa `MockEmailSender`
 - `ENVIRONMENT=production` usa SMTP real
 - En Docker Compose, `PGHOST` se sustituye por `postgres`
+- `POSTGRES_HOST_PORT` solo controla el puerto expuesto en tu máquina host
 
 ## Endpoints rápidos
 
