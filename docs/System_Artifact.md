@@ -118,7 +118,7 @@ Email_Python_FastAPI/
 │   ├── config.py                   # app_config y database_config desde .env
 │   └── database/
 │       ├── base.py                 # Base declarativa compartida de SQLAlchemy
-│       └── connection.py           # Engine, SessionLocal, get_db(), init_db()
+│       └── connection.py           # Engine, SessionLocal, get_db(), check_db_connection()
 │
 ├── core/
 │   ├── exceptions.py               # DomainError, EmailAlreadyExists, WeakPassword
@@ -198,8 +198,8 @@ Email_Python_FastAPI/
 │
 ├── dependencies.py                 # Wiring de inyección de dependencias
 ├── main.py                         # Punto de entrada: FastAPI app, routers, startup
-├── database.sql                    # Script SQL de inicialización de PostgreSQL
-├── init_database.py                # Script Python alternativo de inicialización
+├── database.sql                    # Bootstrap completo del esquema para entornos nuevos
+├── init_database.py                # Script Python para crear la DB y ejecutar Alembic
 ├── requirements.txt                # Dependencias con versiones fijadas
 ├── Dockerfile                      # python:3.12-slim + gcc + libpq-dev
 ├── docker-compose.yml              # Servicios: email-api + postgres:16-alpine
@@ -457,7 +457,7 @@ docker compose up --build
 | Servicio | Imagen | Puerto | Nota |
 |---|---|---|---|
 | `email-api` | Dockerfile (python:3.12-slim) | `8001:8001` | Depende de `postgres` (healthcheck) |
-| `postgres` | `postgres:16-alpine` | `5432:5432` | Inicializa con `database.sql` automáticamente |
+| `postgres` | `postgres:16-alpine` | `5432:5432` | Inicializa con `database.sql` y luego puede alinearse con Alembic |
 
 Los volúmenes `./templates`, `./static` y `./uploads` se montan para hot-reload sin rebuild del contenedor.
 
@@ -476,9 +476,12 @@ uvicorn main:app --reload --port 8001
 
 ### Inicialización de Base de Datos
 
-`main.py` ejecuta `init_db()` en el evento `startup`:
-1. Verifica si el ENUM `emailstatus` existe en PostgreSQL → lo crea si no
-2. `Base.metadata.create_all()` → crea tablas faltantes
+`main.py` ya no crea tablas al arrancar.
+
+El flujo correcto es:
+1. Crear la base de datos si hace falta.
+2. Ejecutar `alembic upgrade head`.
+3. Iniciar la API.
 
 ---
 

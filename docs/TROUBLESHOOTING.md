@@ -9,11 +9,10 @@ El tipo ENUM `emailstatus` ya existe en la base de datos de una ejecución anter
 
 ---
 
-#### **Opción 1: Usar el script Python de inicialización** (RECOMENDADO)
+#### **Opción 1: Ejecutar la migración oficial** (RECOMENDADO)
 
 ```bash
-# Este script maneja automáticamente el ENUM existente
-python init_database.py
+alembic upgrade head
 ```
 
 Luego ejecuta tu aplicación normalmente:
@@ -113,8 +112,9 @@ pip install psycopg2-binary
 ### ✅ Solución
 
 ```bash
-# Opción 1: Usar el script Python
-python init_database.py
+# Opción 1: Crear la base y ejecutar migraciones
+psql -U postgres -c "CREATE DATABASE email_db;"
+alembic upgrade head
 
 # Opción 2: Crear manualmente
 psql -U postgres -c "CREATE DATABASE email_db;"
@@ -295,8 +295,9 @@ psql -U postgres -c "DROP DATABASE IF EXISTS email_db;"
 find . -type d -name "__pycache__" -exec rm -rf {} +
 find . -type f -name "*.pyc" -delete
 
-# 3. Reiniciar
-python init_database.py
+# 3. Crear base y migrar
+psql -U postgres -c "CREATE DATABASE email_db;"
+alembic upgrade head
 
 # 4. Ejecutar
 uvicorn main:app --reload

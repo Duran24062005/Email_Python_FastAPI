@@ -2,7 +2,6 @@ from fastapi import FastAPI
 from fastapi.responses import RedirectResponse
 from app.config.config import app_config
 from app.middlewares.cors import app_cors
-from app.config.database.connection import init_db
 from app.routes.email_routes import email_router
 from app.routes.auth_routes import auth_router
 from app.routes.user_routes import user_router
@@ -16,13 +15,6 @@ app = FastAPI(
     },
     docs_url="/docs",
 )
-
-# Inicializar base de datos al arrancar
-@app.on_event("startup")
-async def startup_event():
-    """Evento que se ejecuta al iniciar la aplicación"""
-    init_db()
-    print("✅ Database initialized successfully")
 
 app_cors(app)
 

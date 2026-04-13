@@ -3,10 +3,13 @@ Script para inicializar la base de datos.
 Ejecutar desde la raiz del proyecto con: python app/init_database.py
 """
 
+from pathlib import Path
+import subprocess
+import sys
+
 from sqlalchemy import create_engine, text
 from app.config.config import database_config
-from app.models.email_model import Base, EmailStatus
-import sys
+
 
 def create_database():
     """Crea la base de datos si no existe"""
@@ -36,47 +39,19 @@ def create_database():
         sys.exit(1)
 
 
-def create_enum_type():
-    """Crea el tipo ENUM si no existe"""
-    db_url = f"postgresql://{database_config['DB_USER']}:{database_config['DB_PASSWORD']}@{database_config['DB_HOST']}:{database_config['DB_PORT']}/{database_config['DB_NAME']}"
-    
-    try:
-        engine = create_engine(db_url)
-        
-        with engine.connect() as conn:
-            # Verificar si el tipo ENUM existe
-            result = conn.execute(
-                text("SELECT 1 FROM pg_type WHERE typname = 'emailstatus'")
-            )
-            
-            if not result.fetchone():
-                # Crear tipo ENUM
-                conn.execute(
-                    text("CREATE TYPE emailstatus AS ENUM ('pending', 'sent', 'failed')")
-                )
-                conn.commit()
-                print("✅ Tipo ENUM 'emailstatus' creado exitosamente")
-            else:
-                print("ℹ️  Tipo ENUM 'emailstatus' ya existe")
-        
-        engine.dispose()
-        
-    except Exception as e:
-        print(f"⚠️  Advertencia al crear ENUM: {e}")
+def run_alembic_upgrade():
+    """Ejecuta las migraciones de Alembic sobre la base configurada."""
+    project_root = Path(__file__).resolve().parents[1]
 
-
-def create_tables():
-    """Crea todas las tablas"""
-    db_url = f"postgresql://{database_config['DB_USER']}:{database_config['DB_PASSWORD']}@{database_config['DB_HOST']}:{database_config['DB_PORT']}/{database_config['DB_NAME']}"
-    
     try:
-        engine = create_engine(db_url)
-        Base.metadata.create_all(bind=engine)
-        print("✅ Tablas creadas exitosamente")
-        engine.dispose()
-        
+        subprocess.run(
+            [sys.executable, "-m", "alembic", "upgrade", "head"],
+            cwd=project_root,
+            check=True,
+        )
+        print("✅ Migraciones Alembic aplicadas correctamente")
     except Exception as e:
-        print(f"❌ Error al crear tablas: {e}")
+        print(f"❌ Error al ejecutar Alembic: {e}")
         sys.exit(1)
 
 
@@ -90,18 +65,14 @@ def main():
     print("\n1️⃣  Creando base de datos...")
     create_database()
     
-    # Paso 2: Crear tipo ENUM
-    print("\n2️⃣  Creando tipo ENUM...")
-    create_enum_type()
-    
-    # Paso 3: Crear tablas
-    print("\n3️⃣  Creando tablas...")
-    create_tables()
+    # Paso 2: Aplicar migraciones
+    print("\n2️⃣  Ejecutando migraciones Alembic...")
+    run_alembic_upgrade()
     
     print("\n" + "=" * 60)
     print("✅ Base de datos inicializada correctamente")
     print("=" * 60)
-    print("\n🚀 Ahora puedes ejecutar: cd app && uvicorn main:app --reload")
+    print("\n🚀 Ahora puedes ejecutar: uvicorn app.main:app --reload --port 8001")
 
 
 if __name__ == "__main__":

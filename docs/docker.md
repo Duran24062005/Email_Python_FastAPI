@@ -13,7 +13,9 @@ Esta guía deja el proyecto listo para ejecutarse con Docker de forma consistent
 
 ```bash
 cp .env.example .env
-docker compose up --build
+docker compose up -d postgres
+docker compose run --rm email-api alembic upgrade head
+docker compose up --build email-api
 ```
 
 Servicios disponibles:
@@ -31,6 +33,7 @@ Servicios disponibles:
 - La imagen base arranca en modo estable sin `--reload`
 - `docker compose` activa `--reload` para desarrollo local
 - PostgreSQL se inicializa con `database.sql`
+- La evolucion incremental del esquema se aplica con Alembic
 
 ## Variables importantes
 
@@ -57,6 +60,7 @@ Notas:
 ```bash
 docker compose up --build
 docker compose up -d
+docker compose run --rm email-api alembic upgrade head
 docker compose logs -f email-api
 docker compose exec email-api bash
 docker compose down
@@ -77,5 +81,14 @@ En ese caso recuerda apuntar `PGHOST` a una base PostgreSQL accesible desde el c
 ## Troubleshooting rápido
 
 - Si la API no levanta, revisa `docker compose logs -f email-api`
+- Si faltan tablas o columnas, ejecuta `docker compose run --rm email-api alembic upgrade head`
 - Si PostgreSQL falla, elimina volúmenes con `docker compose down -v` y vuelve a crear
 - Si no salen correos reales, confirma `ENVIRONMENT=production` y credenciales SMTP
+
+## Flujo recomendado con migraciones
+
+1. Levanta PostgreSQL.
+2. Ejecuta `alembic upgrade head` desde el contenedor de la API.
+3. Inicia la API.
+
+`database.sql` deja una base nueva lista para bootstrap, pero Alembic es quien garantiza que el contenedor quede en la revision vigente.

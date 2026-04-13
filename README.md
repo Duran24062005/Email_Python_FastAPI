@@ -27,7 +27,9 @@ requirements.txt
 
 ```bash
 cp .env.example .env
-docker compose up --build
+docker compose up -d postgres
+docker compose run --rm email-api alembic upgrade head
+docker compose up --build email-api
 ```
 
 Queda disponible en:
@@ -45,10 +47,29 @@ python -m venv venv
 source venv/bin/activate
 pip install -r requirements.txt
 cp .env.example .env
+alembic upgrade head
 uvicorn app.main:app --reload --port 8001
 ```
 
 Si ejecutas la base de datos fuera de Docker, ajusta `PGHOST`, `PGPORT`, `PGUSER`, `PGPASSWORD` y `PGDATABASE` en tu `.env`.
+
+## Migraciones con Alembic
+
+El esquema ya no se crea automaticamente al iniciar la API. Debes aplicar migraciones antes de levantar el servidor:
+
+```bash
+alembic upgrade head
+```
+
+Comandos utiles:
+
+```bash
+alembic current
+alembic history
+alembic downgrade -1
+```
+
+`database.sql` se mantiene como bootstrap completo para entornos nuevos, pero Alembic es la fuente de verdad para la evolucion incremental del esquema.
 
 ## Variables de entorno
 
@@ -117,6 +138,7 @@ Las plantillas viven en `app/templates/` y se resuelven por nombre desde los end
 - [docs/architecture.md](docs/architecture.md): arquitectura en capas
 - [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md): problemas comunes
 - [docs/System_Artifact.md](docs/System_Artifact.md): artefacto general del sistema
+- [docs/alembic.md](docs/alembic.md): que es Alembic, como usarlo y flujo en este proyecto
 - [docs/gitflow.md](docs/gitflow.md): flujo de trabajo Git
 
 ## Desarrollo
