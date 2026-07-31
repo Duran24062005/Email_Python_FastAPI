@@ -137,6 +137,9 @@ Las plantillas viven en `app/templates/` y se resuelven por nombre desde los end
 
 ## Documentación
 
+- [docs/README.md](docs/README.md): índice navegable de documentación para Obsidian
+- [docs/obsidian-map.md](docs/obsidian-map.md): mapa gráfico y relacional de documentación
+- [prds/README.md](prds/README.md): índice funcional de PRDs agrupado por dominio
 - [docs/docker.md](docs/docker.md): guía de Docker y Compose
 - [docs/API_REFERENCE.md](docs/API_REFERENCE.md): referencia de endpoints
 - [docs/architecture.md](docs/architecture.md): arquitectura en capas
