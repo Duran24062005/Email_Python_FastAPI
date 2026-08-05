@@ -29,7 +29,10 @@ class EmailCreate(EmailBase):
                 "recipient": "usuario@example.com",
                 "subject": "Bienvenido",
                 "template_name": "welcome.html",
-                "template_data": {"nombre": "Juan", "empresa": "Mi Empresa"}
+                "template_data": {
+                    "nombre": "Juan",
+                    "empresa": "Mi Empresa"
+                }
             }
         }
 
