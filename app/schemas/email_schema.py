@@ -1,4 +1,4 @@
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, ConfigDict, EmailStr, Field
 from typing import Optional, Dict, Any
 from datetime import datetime
 from enum import Enum
@@ -22,8 +22,8 @@ class EmailCreate(EmailBase):
     template_name: Optional[str] = Field(None, description="Nombre de la plantilla")
     template_data: Optional[Dict[str, Any]] = Field(default_factory=dict)
 
-    class Config:
-        json_schema_extra = {
+    model_config = ConfigDict(
+        json_schema_extra={
             "example": {
                 "user_id": 1,
                 "recipient": "usuario@example.com",
@@ -35,6 +35,7 @@ class EmailCreate(EmailBase):
                 }
             }
         }
+    )
 
 
 class EmailResponse(EmailBase):
@@ -48,8 +49,7 @@ class EmailResponse(EmailBase):
     created_at: datetime
     updated_at: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class EmailUpdate(BaseModel):
@@ -77,8 +77,8 @@ class SendWithTemplateRequest(BaseModel):
         description="Variables para inyectar en la plantilla"
     )
 
-    class Config:
-        json_schema_extra = {
+    model_config = ConfigDict(
+        json_schema_extra={
             "example": {
                 "recipient": "cliente@example.com",
                 "subject": "Bienvenido a nuestra plataforma",
@@ -90,3 +90,4 @@ class SendWithTemplateRequest(BaseModel):
                 }
             }
         }
+    )

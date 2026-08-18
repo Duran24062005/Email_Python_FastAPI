@@ -1,4 +1,4 @@
-from pydantic import BaseModel, EmailStr, Field, field_validator
+from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator
 from typing import Optional
 from datetime import datetime
 from enum import Enum
@@ -26,14 +26,15 @@ class UserCreate(UserBase):
             raise ValueError("La contraseña no puede exceder 72 bytes.")
         return value
 
-    class Config:
-        json_schema_extra = {
+    model_config = ConfigDict(
+        json_schema_extra={
             "example": {
                 "name": "Juan Pérez",
                 "email": "juan@example.com",
                 "password": "securepassword123"
             }
         }
+    )
 
 
 class UserUpdate(BaseModel):
@@ -51,8 +52,7 @@ class UserResponse(UserBase):
     created_at: datetime
     updated_at: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class UserList(BaseModel):
@@ -75,13 +75,14 @@ class LoginRequest(BaseModel):
             raise ValueError("La contraseña no puede exceder 72 bytes.")
         return value
 
-    class Config:
-        json_schema_extra = {
+    model_config = ConfigDict(
+        json_schema_extra={
             "example": {
                 "email": "juan@example.com",
                 "password": "securepassword123"
             }
         }
+    )
 
 
 class TokenResponse(BaseModel):
@@ -109,10 +110,9 @@ class ChangeStatusRequest(BaseModel):
     """Schema para cambiar el estado de un usuario (admin)"""
     status: UserStatus = Field(..., description="Nuevo estado del usuario")
 
-    class Config:
-        json_schema_extra = {
-            "example": {"status": "blocked"}
-        }
+    model_config = ConfigDict(
+        json_schema_extra={"example": {"status": "blocked"}}
+    )
 
 
 class SaveEmailKeyRequest(BaseModel):
@@ -122,7 +122,6 @@ class SaveEmailKeyRequest(BaseModel):
         description="Contraseña de aplicación SMTP del usuario"
     )
 
-    class Config:
-        json_schema_extra = {
-            "example": {"email_key": "xxxx xxxx xxxx xxxx"}
-        }
+    model_config = ConfigDict(
+        json_schema_extra={"example": {"email_key": "xxxx xxxx xxxx xxxx"}}
+    )
