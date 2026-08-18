@@ -90,7 +90,7 @@ class UserService:
 
         # Enviar
         try:
-            from models.email_model import EmailStatus
+            from app.models.email_model import EmailStatus
             success = await self.sender.send(
                 recipient=original.recipient,
                 subject=original.subject,
@@ -101,7 +101,7 @@ class UserService:
             await self.email_repository.update_status(new_record.id, final_status)
             new_record.status = final_status
         except Exception as e:
-            from models.email_model import EmailStatus
+            from app.models.email_model import EmailStatus
             await self.email_repository.update_status(
                 new_record.id, EmailStatus.FAILED, str(e)
             )
@@ -145,7 +145,7 @@ class UserService:
         record = await self.email_repository.create(email_data)
 
         try:
-            from models.email_model import EmailStatus
+            from app.models.email_model import EmailStatus
             success = await self.sender.send(
                 recipient=recipient,
                 subject=subject,
@@ -156,7 +156,7 @@ class UserService:
             await self.email_repository.update_status(record.id, final_status)
             record.status = final_status
         except Exception as e:
-            from models.email_model import EmailStatus
+            from app.models.email_model import EmailStatus
             await self.email_repository.update_status(
                 record.id, EmailStatus.FAILED, str(e)
             )
@@ -178,7 +178,7 @@ class UserService:
         Verifica el token de confirmación enviado al correo del usuario.
         Si es válido, activa email_verify = True en su cuenta.
         """
-        from core.security import decode_access_token
+        from app.core.security import decode_access_token
         import jwt
 
         try:
