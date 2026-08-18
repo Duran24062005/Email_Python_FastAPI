@@ -70,7 +70,7 @@ def test_decode_access_token_rejects_expired_token():
 def test_decode_access_token_rejects_invalid_signature():
     token = jwt.encode(
         {"sub": "1", "exp": 9999999999},
-        "otra-secret-key",
+        "otra-clave-secreta-con-mas-de-32-bytes-para-hmac",
         algorithm="HS256",
     )
     with pytest.raises(jwt.InvalidTokenError):
