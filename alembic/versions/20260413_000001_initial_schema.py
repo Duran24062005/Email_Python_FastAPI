@@ -8,6 +8,7 @@ from __future__ import annotations
 
 from alembic import op
 import sqlalchemy as sa
+from sqlalchemy.dialects import postgresql
 
 
 revision = "20260413_000001"
@@ -103,7 +104,7 @@ def _create_users_table(inspector: sa.Inspector) -> None:
         sa.Column("email_key", sa.String(length=255), nullable=True),
         sa.Column(
             "status",
-            sa.Enum(
+            postgresql.ENUM(
                 "pending",
                 "active",
                 "deleted",
@@ -116,7 +117,7 @@ def _create_users_table(inspector: sa.Inspector) -> None:
         ),
         sa.Column(
             "role",
-            sa.Enum("admin", "general", name="userRole", create_type=False),
+            postgresql.ENUM("admin", "general", name="userRole", create_type=False),
             nullable=False,
             server_default="general",
         ),
@@ -162,7 +163,7 @@ def _align_users_table(inspector: sa.Inspector) -> None:
             "users",
             sa.Column(
                 "status",
-                sa.Enum(
+                postgresql.ENUM(
                     "pending",
                     "active",
                     "deleted",
@@ -182,7 +183,7 @@ def _align_users_table(inspector: sa.Inspector) -> None:
             "users",
             sa.Column(
                 "role",
-                sa.Enum("admin", "general", name="userRole", create_type=False),
+                postgresql.ENUM("admin", "general", name="userRole", create_type=False),
                 nullable=True,
                 server_default="general",
             ),
@@ -230,7 +231,7 @@ def _create_emails_table(inspector: sa.Inspector) -> None:
         sa.Column("html_body", sa.Text(), nullable=True),
         sa.Column(
             "status",
-            sa.Enum("pending", "sent", "failed", name="emailstatus", create_type=False),
+            postgresql.ENUM("pending", "sent", "failed", name="emailstatus", create_type=False),
             nullable=False,
             server_default="pending",
         ),
@@ -251,7 +252,7 @@ def _align_emails_table(inspector: sa.Inspector) -> None:
         ("subject", sa.String(length=500)),
         ("body", sa.Text()),
         ("html_body", sa.Text()),
-        ("status", sa.Enum("pending", "sent", "failed", name="emailstatus", create_type=False)),
+        ("status", postgresql.ENUM("pending", "sent", "failed", name="emailstatus", create_type=False)),
         ("error_message", sa.Text()),
         ("sent_at", sa.DateTime()),
         ("created_at", sa.DateTime()),
