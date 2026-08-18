@@ -148,6 +148,17 @@ Las plantillas viven en `app/templates/` y se resuelven por nombre desde los end
 - [docs/alembic.md](docs/alembic.md): que es Alembic, como usarlo y flujo en este proyecto
 - [docs/gitflow.md](docs/gitflow.md): flujo de trabajo Git
 
+## Testing
+
+La suite de tests unitarios cubre servicios, repositorios, schemas, seguridad, middlewares y un smoke test de la app, sin necesidad de PostgreSQL ni SMTP (usa fakes y SQLite en memoria).
+
+```bash
+pip install -r requirements-dev.txt
+pytest
+```
+
+Guía completa (estructura, estrategia y cobertura) en [docs/testing.md](docs/testing.md).
+
 ## Desarrollo
 
 Durante desarrollo, la app expone autorecarga cuando se ejecuta con `docker compose` o `uvicorn --reload`. Para correos reales con Gmail, usa contraseña de aplicación y no la contraseña normal de la cuenta.

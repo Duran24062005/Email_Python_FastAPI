@@ -31,6 +31,7 @@ graph TD
     alembic --> prd026["PRD 026 Alembic/schema"]
     docker --> troubleshooting
 
+    maintenance --> testing["Testing"]
     maintenance --> docstrings["Docstrings"]
     maintenance --> styleDocstrings["Estandar docstrings"]
 
@@ -120,6 +121,7 @@ graph TD
 
 ### Documentacion y mantenimiento
 
+- [[docs/testing|Testing]] se revisa al cambiar servicios, repositorios, schemas, middlewares o seguridad; documenta como ejecutar la suite, la estrategia (fakes + SQLite en memoria) y la cobertura.
 - [[docs/docstring_guide|Docstrings]] y [[docs/STYLE_DOSCTRINGS_GUIDE|Estandar de docstrings]] se revisan al cambiar documentacion de rutas o descripciones de Swagger.
 - [[docs/gitflow|GitFlow]] se relaciona con los PRDs porque cada PRD debe poder rastrearse a cambios pequenos y coherentes.
 

@@ -37,6 +37,7 @@ Para ver las relaciones de forma grafica:
 
 | Documento | Uso |
 |---|---|
+| [[docs/testing|Testing]] | Suite de tests unitarios: como ejecutarla, estructura, estrategia y cobertura. |
 | [[docs/docstring_guide|Docstrings]] | Guia de docstrings para FastAPI y Swagger. |
 | [[docs/STYLE_DOSCTRINGS_GUIDE|Estandar de docstrings]] | Plantilla y formato esperado para documentar modulos y endpoints. |
 
