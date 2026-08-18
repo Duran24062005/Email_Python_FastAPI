@@ -96,14 +96,36 @@ Verifica que la app importa y que `/health`, `/` (redirección a `/docs`) y
   ampliar el fake correspondiente.
 3. Ejecutar `pytest` y `flake8 tests` hasta dejarlos en verde.
 
+## Jobs de CI (build_and_test.yaml)
+
+El workflow ejecuta 5 jobs en paralelo (con caché de pip y cancelación de
+runs duplicados de la misma rama):
+
+| Job | Qué valida |
+|---|---|
+| `lint` | flake8: errores de sintaxis/undefined names (fallan) + lint completo informativo |
+| `test` | pytest con cobertura: `--cov=app --cov-fail-under=75` y sube `coverage.xml` como artifact |
+| `migrations` | PostgreSQL 16 real (servicio) + `alembic upgrade head` sobre BD fresca, `check_db_connection()` y `alembic current` |
+| `smoke` | import de `app.main`, existencia de plantillas clave y `/health` con uvicorn real |
+| `docker` | compila la imagen con `docker build` (sin push) |
+
+El job `migrations` detecta migraciones rotas o no aplicables desde cero; el
+job `test` falla si la cobertura baja del 75%.
+
 ## Notas de la implementación
 
 - Se corrigieron imports internos rotos en `app/services/user_service.py`:
   `from models.email_model import ...` y `from core.security import ...`
   apuntaban a paquetes inexistentes (el paquete raíz es `app`). Ahora usan
   `from app.models...` y `from app.core...`.
-- El workflow de CI se actualizó a Python 3.12 (antes 3.10) porque el código
-  usa sintaxis PEP 701, e instala `requirements-dev.txt` para tener pytest,
-  pytest-asyncio y httpx.
+- Se corrigió la migración inicial (`alembic/versions/20260413_000001`):
+  `sa.Enum(..., create_type=False)` ignoraba silenciosamente `create_type`
+  (no es un argumento del `Enum` genérico de SQLAlchemy), por lo que al crear
+  la tabla `users` se emitía un `CREATE TYPE "userStatus"` duplicado y la
+  migración fallaba en BD fresca. Se usa `postgresql.ENUM(..., create_type=False)`,
+  que sí lo respeta.
+- El workflow de CI usa Python 3.12 (antes 3.10) porque el código usa sintaxis
+  PEP 701, e instala `requirements-dev.txt` para tener pytest, pytest-asyncio,
+  pytest-cov, flake8 y httpx.
 - `requirements-dev.txt` contiene las dependencias de desarrollo; las de
   producción siguen en `requirements.txt`.

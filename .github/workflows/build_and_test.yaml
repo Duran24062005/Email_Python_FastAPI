@@ -1,39 +1,207 @@
-# This workflow will install Python dependencies, run tests and lint with a single version of Python
-# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-python
+# CI del proyecto Email Python FastAPI
+#
+# Jobs (paralelos, independientes):
+#   1. lint        - flake8 (errores de sintaxis/undefined names hacen fallar)
+#   2. test        - pytest + cobertura (pytest-cov) con artifact
+#   3. migrations  - PostgreSQL 16 real + `alembic upgrade head` sobre BD fresca
+#   4. smoke       - import de la app, plantillas y /health con uvicorn real
+#   5. docker      - verifica que el Dockerfile compila la imagen
+#
+# Notas:
+#   - Python 3.12: el código usa f-strings anidadas (PEP 701), no compila en 3.10/3.11.
+#   - Los tests unitarios no requieren base de datos (fakes + SQLite en memoria);
+#     la validación contra PostgreSQL real vive en el job `migrations`.
 
-name: Python application
+name: Build and Test
 
 on:
   push:
-    branches: [ "main" ]
+    branches: ["main"]
   pull_request:
-    branches: [ "main" ]
+    branches: ["main"]
 
 permissions:
   contents: read
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  PYTHON_VERSION: "3.12"
+
 jobs:
-  build:
-
+  lint:
+    name: Lint (flake8)
     runs-on: ubuntu-latest
-
     steps:
-    - uses: actions/checkout@v4
-    - name: Set up Python 3.12
-      uses: actions/setup-python@v3
-      with:
-        python-version: "3.12"
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install flake8
-        if [ -f requirements-dev.txt ]; then pip install -r requirements-dev.txt; elif [ -f requirements.txt ]; then pip install -r requirements.txt; fi
-    - name: Lint with flake8
-      run: |
-        # stop the build if there are Python syntax errors or undefined names
-        flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
-        # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
-        flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
-    - name: Test with pytest
-      run: |
-        pytest
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+          cache-dependency-path: requirements-dev.txt
+
+      - name: Install dependencies
+        run: pip install -r requirements-dev.txt
+
+      - name: Check syntax and undefined names (fails the build)
+        run: flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+
+      - name: Full lint (informational, exit-zero)
+        run: flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+
+  test:
+    name: Unit tests (pytest + coverage)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+          cache-dependency-path: requirements-dev.txt
+
+      - name: Install dependencies
+        run: pip install -r requirements-dev.txt
+
+      - name: Run tests with coverage
+        run: pytest --cov=app --cov-report=term-missing --cov-report=xml:coverage.xml --cov-fail-under=75
+
+      - name: Upload coverage report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: coverage.xml
+
+  migrations:
+    name: Migrations (PostgreSQL + Alembic)
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: admin
+          POSTGRES_PASSWORD: admin123
+          POSTGRES_DB: email_db
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U admin -d email_db"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      PGHOST: 127.0.0.1
+      PGPORT: 5432
+      PGUSER: admin
+      PGPASSWORD: admin123
+      PGDATABASE: email_db
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+          cache-dependency-path: requirements.txt
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Apply migrations on a fresh database
+        run: alembic upgrade head
+
+      - name: Verify the app connects to the database
+        run: python -c "from app.config.database.connection import check_db_connection; check_db_connection(); print('DB connection OK')"
+
+      - name: Show current revision
+        run: alembic current
+
+  smoke:
+    name: Smoke test (app real)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+          cache-dependency-path: requirements-dev.txt
+
+      - name: Install dependencies
+        run: pip install -r requirements-dev.txt
+
+      - name: Import check, templates and /health with a real server
+        run: |
+          python - <<'EOF'
+          import json
+          import subprocess
+          import sys
+          import time
+          import urllib.request
+          from pathlib import Path
+
+          # 1. La app importa sin errores
+          from app.main import app  # noqa: F401
+          print("app.main import OK")
+
+          # 2. Las plantillas usadas por el código existen
+          templates_dir = Path("app/templates")
+          expected = {
+              "welcome.html",
+              "account_approved.html",
+              "welcome_active_count_educonnect.html",
+              "welcome_inactive_count_educonnect.html",
+              "login_educonnect.html",
+              "auth-login.html",
+              "auth-register.html",
+          }
+          missing = expected - {p.name for p in templates_dir.iterdir() if p.is_file()}
+          if missing:
+              raise SystemExit(f"Faltan plantillas: {sorted(missing)}")
+          print(f"plantillas OK ({len(expected)} verificadas)")
+
+          # 3. Levanta uvicorn real y comprueba /health
+          proc = subprocess.Popen(
+              [sys.executable, "-m", "uvicorn", "app.main:app",
+               "--host", "127.0.0.1", "--port", "8001"],
+              stdout=subprocess.DEVNULL,
+              stderr=subprocess.DEVNULL,
+          )
+          try:
+              for _ in range(30):
+                  try:
+                      with urllib.request.urlopen(
+                          "http://127.0.0.1:8001/health", timeout=2
+                      ) as resp:
+                          body = json.loads(resp.read())
+                          assert resp.status == 200, resp.status
+                          assert body["status"] == "ok", body
+                          print("health OK:", body)
+                          break
+                  except Exception:
+                      time.sleep(1)
+              else:
+                  raise SystemExit("El servidor no respondió /health a tiempo")
+          finally:
+              proc.terminate()
+              proc.wait(timeout=10)
+          EOF
+
+  docker:
+    name: Build Docker image
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build image (without push)
+        run: docker build -t email-api:ci .

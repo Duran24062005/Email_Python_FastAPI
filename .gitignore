@@ -10,6 +10,7 @@
 
 # testing
 /coverage
+.coverage
 
 # next.js
 /.next/
@@ -65,6 +66,7 @@ Desktop.ini
 
 # testing
 /coverage
+.coverage
 
 # next.js
 /.next/
