@@ -9,7 +9,7 @@ Estrategia:
   inversión de dependencias que ya aplica el proyecto.
 """
 
-from datetime import datetime
+from datetime import UTC, datetime
 
 import pytest
 from sqlalchemy import create_engine
@@ -53,7 +53,7 @@ def db_session():
 
 def make_user(**overrides) -> User:
     """Construye un User con valores por defecto y permite sobrescribirlos."""
-    now = datetime.utcnow()
+    now = datetime.now(UTC).replace(tzinfo=None)
     defaults = dict(
         id=1,
         name="Juan Pérez",
@@ -73,7 +73,7 @@ def make_user(**overrides) -> User:
 
 def make_email(**overrides) -> Email:
     """Construye un Email con valores por defecto y permite sobrescribirlos."""
-    now = datetime.utcnow()
+    now = datetime.now(UTC).replace(tzinfo=None)
     defaults = dict(
         id=1,
         user_id=1,
@@ -144,7 +144,7 @@ class FakeUserRepository:
             return None
         for field, value in user_data.model_dump(exclude_unset=True).items():
             setattr(user, field, value)
-        user.updated_at = datetime.utcnow()
+        user.updated_at = datetime.now(UTC).replace(tzinfo=None)
         return user
 
     async def update_status(self, user_id: int, new_status: UserStatus) -> User | None:
@@ -152,7 +152,7 @@ class FakeUserRepository:
         if not user:
             return None
         user.status = new_status
-        user.updated_at = datetime.utcnow()
+        user.updated_at = datetime.now(UTC).replace(tzinfo=None)
         return user
 
     async def update_email_key(self, user_id: int, email_key: str) -> None:
@@ -168,7 +168,7 @@ class FakeUserRepository:
     async def update_last_login(self, user_id: int) -> None:
         user = await self.get_by_id(user_id)
         if user:
-            user.last_login = datetime.utcnow()
+            user.last_login = datetime.now(UTC).replace(tzinfo=None)
 
     async def update_password(self, user_id: int, hashed_password: str) -> None:
         user = await self.get_by_id(user_id)
@@ -230,7 +230,7 @@ class FakeEmailRepository:
             return None
         for field, value in email_data.model_dump(exclude_unset=True).items():
             setattr(email, field, value)
-        email.updated_at = datetime.utcnow()
+        email.updated_at = datetime.now(UTC).replace(tzinfo=None)
         return email
 
     async def delete(self, email_id: int) -> bool:
@@ -248,7 +248,7 @@ class FakeEmailRepository:
         email.status = status
         email.error_message = error_message
         if status == EmailStatus.SENT:
-            email.sent_at = datetime.utcnow()
+            email.sent_at = datetime.now(UTC).replace(tzinfo=None)
         return email
 
 

@@ -1,8 +1,13 @@
 from sqlalchemy import Column, Integer, String, DateTime, Enum, Boolean
 from sqlalchemy.orm import relationship
-from datetime import datetime
+from datetime import UTC, datetime
 import enum
 from app.config.database.base import Base  # ← Base compartida, sin import circular
+
+
+def _utcnow() -> datetime:
+    """UTC naive (equivale a datetime.utcnow, sin la deprecación de Python 3.12)."""
+    return datetime.now(UTC).replace(tzinfo=None)
 
 
 class UserStatus(str, enum.Enum):
@@ -37,8 +42,7 @@ class User(Base):
     )
     last_login = Column(DateTime, nullable=True)
     email_verify = Column(Boolean, nullable=True)
-    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+    created_at = Column(DateTime, default=_utcnow, nullable=False)
+    updated_at = Column(DateTime, default=_utcnow, onupdate=_utcnow, nullable=False)
 
     emails = relationship("Email", back_populates="user", uselist=True)  # ← "emails" plural
-    

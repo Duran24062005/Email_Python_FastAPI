@@ -1,8 +1,13 @@
 from sqlalchemy import Column, Integer, String, Text, DateTime, Enum, ForeignKey
 from sqlalchemy.orm import relationship
-from datetime import datetime
+from datetime import UTC, datetime
 import enum
 from app.config.database.base import Base  # ← Base compartida
+
+
+def _utcnow() -> datetime:
+    """UTC naive (equivale a datetime.utcnow, sin la deprecación de Python 3.12)."""
+    return datetime.now(UTC).replace(tzinfo=None)
 
 
 class EmailStatus(str, enum.Enum):
@@ -22,8 +27,8 @@ class Email(Base):
     html_body = Column(Text, nullable=True)
     status = Column(
         Enum(
-            EmailStatus, 
-            name='emailstatus', 
+            EmailStatus,
+            name='emailstatus',
             create_type=False,
             values_callable=lambda obj: [e.value for e in obj]
         ),
@@ -32,8 +37,8 @@ class Email(Base):
     )
     error_message = Column(Text, nullable=True)
     sent_at = Column(DateTime, nullable=True)
-    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+    created_at = Column(DateTime, default=_utcnow, nullable=False)
+    updated_at = Column(DateTime, default=_utcnow, onupdate=_utcnow, nullable=False)
 
     user = relationship("User", back_populates="emails")
 

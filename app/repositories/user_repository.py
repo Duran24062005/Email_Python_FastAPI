@@ -1,5 +1,5 @@
 from typing import List, Optional
-from datetime import datetime
+from datetime import UTC, datetime
 from sqlalchemy.orm import Session
 from app.interfaces.user_interfaces import IUserRepository
 from app.models.user_models import User, UserRole, UserStatus
@@ -69,7 +69,7 @@ class UserRepository(IUserRepository):
         for field, value in update_data.items():
             setattr(user, field, value)
 
-        user.updated_at = datetime.utcnow()
+        user.updated_at = datetime.now(UTC).replace(tzinfo=None)
         self.db.commit()
         self.db.refresh(user)
         return user
@@ -80,7 +80,7 @@ class UserRepository(IUserRepository):
         if not user:
             return None
         user.status = new_status
-        user.updated_at = datetime.utcnow()
+        user.updated_at = datetime.now(UTC).replace(tzinfo=None)
         self.db.commit()
         self.db.refresh(user)
         return user
@@ -90,7 +90,7 @@ class UserRepository(IUserRepository):
         user = await self.get_by_id(user_id)
         if user:
             user.email_key = email_key
-            user.updated_at = datetime.utcnow()
+            user.updated_at = datetime.now(UTC).replace(tzinfo=None)
             self.db.commit()
 
     async def set_email_verified(self, user_id: int) -> None:
@@ -98,20 +98,20 @@ class UserRepository(IUserRepository):
         user = await self.get_by_id(user_id)
         if user:
             user.email_verify = True
-            user.updated_at = datetime.utcnow()
+            user.updated_at = datetime.now(UTC).replace(tzinfo=None)
             self.db.commit()
 
     async def update_last_login(self, user_id: int) -> None:
         user = await self.get_by_id(user_id)
         if user:
-            user.last_login = datetime.utcnow()
+            user.last_login = datetime.now(UTC).replace(tzinfo=None)
             self.db.commit()
 
     async def update_password(self, user_id: int, hashed_password: str) -> None:
         user = await self.get_by_id(user_id)
         if user:
             user.hash_password = hashed_password
-            user.updated_at = datetime.utcnow()
+            user.updated_at = datetime.now(UTC).replace(tzinfo=None)
             self.db.commit()
 
     async def delete(self, user_id: int) -> bool:

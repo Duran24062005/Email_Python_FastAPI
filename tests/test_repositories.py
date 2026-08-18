@@ -4,7 +4,7 @@ SQLite implementa la misma API de sesión de SQLAlchemy que PostgreSQL,
 por lo que permite probar la lógica de acceso a datos sin base externa.
 """
 
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
 
 from app.models.user_models import UserRole, UserStatus
 from app.models.email_model import EmailStatus
@@ -177,8 +177,8 @@ async def test_email_repository_get_by_user_id_orders_by_date_desc(db_session):
     ))
 
     # Controlar fechas para verificar el orden descendente
-    first.created_at = datetime.utcnow() - timedelta(hours=2)
-    second.created_at = datetime.utcnow()
+    first.created_at = datetime.now(UTC).replace(tzinfo=None) - timedelta(hours=2)
+    second.created_at = datetime.now(UTC).replace(tzinfo=None)
     db_session.commit()
 
     inbox = await repo.get_by_user_id(1)

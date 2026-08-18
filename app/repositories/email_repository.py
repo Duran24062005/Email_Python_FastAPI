@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 from app.models.email_model import Email, EmailStatus
 from app.schemas.email_schema import EmailCreate, EmailUpdate
 from app.interfaces.email_interfaces import IEmailRepository
-from datetime import datetime
+from datetime import UTC, datetime
 
 
 class EmailRepository(IEmailRepository):
@@ -61,7 +61,7 @@ class EmailRepository(IEmailRepository):
         for field, value in update_data.items():
             setattr(email, field, value)
 
-        email.updated_at = datetime.utcnow()
+        email.updated_at = datetime.now(UTC).replace(tzinfo=None)
         self.db.commit()
         self.db.refresh(email)
         return email
@@ -91,7 +91,7 @@ class EmailRepository(IEmailRepository):
         email.error_message = error_message
 
         if status == EmailStatus.SENT:
-            email.sent_at = datetime.utcnow()
+            email.sent_at = datetime.now(UTC).replace(tzinfo=None)
 
         self.db.commit()
         self.db.refresh(email)
